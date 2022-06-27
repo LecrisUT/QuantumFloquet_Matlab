@@ -1,57 +1,51 @@
-classdef TwoLevel < Calc.baseFloquet
+classdef BoxParticle < Calc.baseFloquet
     properties
-        w0
-        v
         V   = 0
     end
+    methods (Access=protected)
+        function ht = get_ht(obj)
+            ht = zeros(obj.N,obj.N,3);
+            ht(:,:,2) = diag((1:obj.N).^2);
+            th1 = ones(obj.N-1,1);
+            th1(2:2:end) = -1;
+            th1 = obj.V/4 * th1;
+            ht(:,:,3) = diag(th1,1)+diag(th1,-1);
+            ht(:,:,1) = ht(:,:,3)';
+        end
+        function h = get_h(obj)
+            % Build Hamiltonian primitives
+            % Column1: Non-interacting diagonal E_n=n^2*E_0
+            % Column2: Driving of form [1 -1 1 -1 ...]
+            h = [(1:obj.N).^2' ones(obj.N,1)];
+            h(2:2:end,2) = -1;
+            % Build the Hamiltonian diagonals
+            h = [obj.V/4*[h(1:end-1,2);0],...
+                obj.V/4*[0;h(1:end-1,2)],...
+                h(:,1),...
+                obj.V/4*[h(1:end-1,2);0],...
+                obj.V/4*[0;h(1:end-1,2)]];
+            % Extend the Hamiltonian diagonals
+            h = repmat(h,obj.k_max2,1);
+            h = spdiags(h,[-obj.N-1 -obj.N+1 0 obj.N-1 obj.N+1],...
+                obj.N*obj.k_max2,obj.N*obj.k_max2);
+        end
+    end
     methods
-        function obj = TwoLevel(Args)
+        function obj = BoxParticle(N,Args)
             arguments
-                Args.w0     = 1
-                Args.w      = 1.5
-                Args.k_max  = 100
-                Args.v      = 1E-4
+                N
+                Args.w      = 8.3
+                Args.k_max  = 200
                 Args.xi     = 1E-2
             end
-            obj@Calc.baseFloquet(2,Args.w,...
+            obj@Calc.baseFloquet(N,Args.w,...
                 k_max=Args.k_max,hk_max=1,xi=Args.xi);
-            obj.w0 = Args.w0;
-            obj.v = Args.v;
         end
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);
             S = jsondecode(j);
-            S.two_level = struct('w0',obj.w0,'v',obj.v,'xi',obj.xi,'V',obj.V);
+            S.box_particle = struct('xi',obj.xi,'V',obj.V);
             json = jsonencode(S,varargin{:});
-        end
-        function h = get_h(obj)
-            hdiag=[obj.v      obj.w0/2  obj.V/2;
-                   obj.V/2   -obj.w0/2  obj.v];
-	        hdiag = repmat(hdiag,obj.k_max2,1);
-	        h = spdiags(hdiag,-1:1,2*obj.k_max2,2*obj.k_max2);
-        end
-        function ht = get_ht(obj)
-            error('Not implemented');
-        end
-        function Res=variational(obj,method,Args,Flags,Args2)
-            arguments
-                obj
-                method
-                Args.opts
-                Args.Psi0
-                Args.TypX
-		        Args.tol	(1,1)	double	=1E-10
-		        Args.filter_nconv	logical
-                Args.functions
-                Flags.TrackPsi       logical
-                Args2.th_range      (1,:)   double
-            end
-            if isfield(Args2,'th_range')
-                Args.Psi0=[cos(Args2.th_range);sin(Args2.th_range)];
-            end
-            Args = namedargs2cell(Args);
-            Flags = namedargs2cell(Flags);
-            Res = variational@Calc.baseFloquet(obj,method,Args{:},Flags{:});
         end
         function Res = AEEigs(obj,V_range,Args)
             arguments
@@ -64,7 +58,11 @@ classdef TwoLevel < Calc.baseFloquet
             for iV=1:nV
 	            obj.V=V_range(iV);
                 hf = obj.hf;
-                [tPsi,teps] = eigs(hf,obj.N,0);
+                try
+                    [tPsi,teps] = eigs(hf,obj.N,0);
+                catch
+                    [tPsi,teps] = eigs(hf,obj.N,1E-12);
+                end
                 teps = diag(teps);
                 Hbar = obj.HBar(tPsi,teps);
                 [ttPsi,tEbar] = eig(Hbar,'vector');
@@ -91,7 +89,7 @@ classdef TwoLevel < Calc.baseFloquet
                     [~,perm] = sort(perm);
 	                tPsi = tPsi(:,perm);
 	                teps = teps(perm);
-	                tEbar=tEbar(perm);
+	                tEbar = tEbar(perm);
 	                tPsi0 = tPsi0(:,perm);
 	                dk = round((teps-teps_prev) / obj.w);
                     for iN = 1:obj.N
@@ -122,7 +120,11 @@ classdef TwoLevel < Calc.baseFloquet
             Res(nV,obj.N) = struct('Psi',[],'eps',[]);
             for iV=1:nV
 	            obj.V=V_range(iV);
-                [tPsi,teps] = eigs(obj.hf,obj.N,0);
+                try
+                    [tPsi,teps] = eigs(obj.hf,obj.N,0);
+                catch
+                    [tPsi,teps] = eigs(obj.hf,obj.N,1E-12);
+                end
                 teps = diag(teps);
                 tPsi0 = obj.Psi0(tPsi);
                 if iV == 1

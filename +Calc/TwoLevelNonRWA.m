@@ -4,9 +4,6 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
         v
         V   = 0
     end
-    properties (Dependent)
-        h
-    end
     methods
         function obj = TwoLevelNonRWA(Args)
             arguments
@@ -16,7 +13,8 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
                 Args.v      = 1E-6
                 Args.xi     = 1E-3
             end
-            obj@Calc.baseFloquet(2,Args.w,Args.k_max,10,'xi',Args.xi);
+            obj@Calc.baseFloquet(2,Args.w,...
+                k_max=Args.k_max,hk_max=10,xi=Args.xi);
             obj.w0 = Args.w0;
             obj.v = Args.v;
         end
@@ -26,7 +24,7 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
             S.two_level = struct('w0',obj.w0,'v',obj.v,'xi',obj.xi,'V',obj.V);
             json = jsonencode(S,varargin{:});
         end
-        function h = get.h(obj)
+        function h = get_h(obj)
             hdiag=[obj.V/2  0  0        obj.w0/2  obj.V/2   0  0;
                    0        0  obj.V/2 -obj.w0/2  0         0  obj.V/2];
 	        hdiag = repmat(hdiag,obj.k_max2,1);
@@ -36,6 +34,9 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
 	        vt = spdiags(vdiag,-10:10,2*obj.k_max2,2*obj.k_max2);
             vt = vt + vt';
             h = h + vt;
+        end
+        function ht = get_ht(obj)
+            error('Not implemented');
         end
         function Res=variational(obj,method,Args,Flags,Args2)
             arguments
@@ -69,7 +70,7 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
                 hf = obj.hf;
                 [tPsi,teps] = eigs(hf,obj.N,0);
                 teps = diag(teps);
-                Hbar = tPsi' * obj.h * tPsi;
+                Hbar = obj.HBar(tPsi,teps);
                 [ttPsi,tEbar] = eig(Hbar,'vector');
                 tPsi = tPsi * ttPsi;
                 tPsi0 = obj.Psi0(tPsi);
@@ -80,11 +81,18 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
                     tPsi = tPsi(:,ind);
                     tPsi0 = tPsi0(:,ind);
                 else
-                    perm = 1:obj.N;
-                    for iN = 1:obj.N
-		                [mval,ind]=max(abs(tPsi0_prev'*tPsi0(:,iN)));
-		                perm(iN)=ind;
+                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
+                    % Check if overlap is too small to adiabatically
+                    % continue
+                    if ~isempty(find(abs(1-mval)>1E-1, 1))
+                        warning('Overlap is too small');
                     end
+                    % Check if missing values
+                    if length(perm) ~= length(unique(perm))
+                        error('Missing permutation index');
+                    end
+                    % Reorder to permute properly
+                    [~,perm] = sort(perm);
 	                tPsi = tPsi(:,perm);
 	                teps = teps(perm);
 	                tEbar=tEbar(perm);
@@ -126,11 +134,18 @@ classdef TwoLevelNonRWA < Calc.baseFloquet
                     tPsi = tPsi(:,ind);
                     tPsi0 = tPsi0(:,ind);
                 else
-                    perm = 1:obj.N;
-                    for iN = 1:obj.N
-		                [mval,ind]=max(abs(tPsi0_prev' * tPsi0(:,iN)));
-		                perm(iN)=ind;
+                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
+                    % Check if overlap is too small to adiabatically
+                    % continue
+                    if ~isempty(find(abs(1-mval)>1E-1, 1))
+                        warning('Overlap is too small');
                     end
+                    % Check if missing values
+                    if length(perm) ~= length(unique(perm))
+                        error('Missing permutation index');
+                    end
+                    % Reorder to permute properly
+                    [~,perm] = sort(perm);
 	                tPsi = tPsi(:,perm);
 	                teps = teps(perm);
 	                tPsi0 = tPsi0(:,perm);

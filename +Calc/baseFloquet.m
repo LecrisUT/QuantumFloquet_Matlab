@@ -7,13 +7,20 @@ classdef baseFloquet < Calc.baseCalc
         xi
     end
     properties (Dependent)
+        k_range
         k_max2
         hk_max2
         pt
-        hf
-    end
-    properties (Dependent,Abstract)
         h
+        ht
+        hf
+        hf2
+    end
+    properties (Access=private)
+        cache_ht
+        cache_h
+        cache_hf
+        cache_hf2
     end
     properties (SetAccess=protected)
         sMat
@@ -22,31 +29,32 @@ classdef baseFloquet < Calc.baseCalc
         sInd
         cacheMat
     end
+    methods (Access=protected)
+        function h = get_h(obj)
+            tht = reshape(obj.ht,obj.N,obj.N * obj.hk_max2);
+            [h_diag,ind] = spdiags(tht);
+            h_diag = repmat(h_diag,obj.k_max2,1);
+            h = spdiags(h_diag,ind,obj.N * obj.k_max2, obj.N * obj.k_max2);
+        end
+    end
+    methods (Abstract,Access=protected)
+        get_ht(obj)
+    end
     methods
-%         function obj = baseFloquet(N,w,hk_max,k_max,Args)
-%             arguments
-%                 N
-%                 w
-%                 hk_max      = 1
-%                 k_max       = 100
-%                 Args.xi     = 1E-6
-%                 Args.diag   = true
-%                 Args.cacheMat = true
-%             end
-        function obj = baseFloquet(N,w,k_max,hk_max,Args)
+        function obj = baseFloquet(N,w,Args)
             arguments
                 N
                 w
-                k_max       = 100
-                hk_max      = 1
+                Args.k_max       = 100
+                Args.hk_max      = 1
                 Args.xi     = 1E-6
                 Args.diag   = true
                 Args.cacheMat = true
             end
             obj.N = N;
             obj.w = w;
-            obj.k_max = k_max;
-            obj.hk_max = hk_max;
+            obj.k_max = Args.k_max;
+            obj.hk_max = Args.hk_max;
             obj.xi = Args.xi;
             obj.cacheMat = Args.cacheMat;
             if Args.diag
@@ -68,6 +76,9 @@ classdef baseFloquet < Calc.baseCalc
                 error('Not implemented')
             end
         end
+        function k_range = get.k_range(obj)
+            k_range = -obj.k_max:obj.k_max;
+        end
         function k_max2 = get.k_max2(obj)
             k_max2 = 2 * obj.k_max + 1;
         end
@@ -75,12 +86,88 @@ classdef baseFloquet < Calc.baseCalc
             hk_max2 = 2 * obj.hk_max + 1;
         end
         function pt = get.pt(obj)
-            pt=[obj.k_max:-1:-obj.k_max;obj.k_max:-1:-obj.k_max] * obj.w;
-            pt=pt(:);
-            pt=spdiags(pt,0,obj.N * obj.k_max2,obj.N * obj.k_max2);
+            pt = (obj.k_max:-1:-obj.k_max) * obj.w;
+            pt = repmat(pt,obj.N,1);
+            pt = pt(:);
+            pt = spdiags(pt,0,obj.N * obj.k_max2,obj.N * obj.k_max2);
+        end
+        function ht = get.ht(obj)
+            if obj.cacheMat
+                if isempty(obj.cache_ht)
+                    obj.cache_ht = obj.get_ht;
+                end
+                ht = obj.cache_ht;
+            else
+                ht = obj.get_ht;
+            end
+        end
+        function h = get.h(obj)
+            if obj.cacheMat
+                if isempty(obj.cache_h)
+                    obj.cache_h = obj.get_h;
+                end
+                h = obj.cache_h;
+            else
+                h = obj.get_h;
+            end
         end
         function hf = get.hf(obj)
-            hf = obj.h + obj.pt;
+            if obj.cacheMat
+                if isempty(obj.cache_hf)
+                    obj.cache_hf = obj.h + obj.pt;
+                end
+                hf = obj.cache_hf;
+            else
+                hf = obj.h + obj.pt;
+            end
+        end
+        function hf2 = get.hf2(obj)
+            if obj.cacheMat
+                if isempty(obj.cache_hf2)
+                    obj.cache_hf2 = obj.hf * obj.hf;
+                end
+                hf2 = obj.cache_hf2;
+            else
+                thf = obj.hf;
+                hf2 = thf * thf;
+            end
+        end
+        function Sk = Sk(obj,k,Args)
+            arguments
+                obj
+                k
+                Args.prev_Sk
+                Args.eps
+            end
+            if isfield(Args,'prev_Sk')
+                if obj.hk_max > 1
+                    warning('Not implemented, using only H^(1)');
+                end
+                error('Not Implemented');
+            else
+                if obj.hk_max > 1
+                    warning('Not implemented, using only H^(1)')
+                end
+                tht = obj.ht;
+                th = tht(:,:,obj.hk_max+1 + 1) + tht(:,:,obj.hk_max+1 - 1);
+                max_E = eig(th,'vector');
+                max_E = max(abs(max_E));
+                Sk = max_E / k / obj.w;
+            end
+        end
+        function HBar = HBar(obj,psi,eps)
+            M = size(psi,2);
+            eps = mod(eps,obj.w);
+            HBar = psi' * obj.h * psi;
+            for iM = 1:M-1
+                for iN = iM+1:M
+                    % Check for near resonance
+                    if abs(eps(iM)-eps(iN)) < obj.xi; continue; end
+                    % Set non-resonant components to 0
+                    HBar(iM,iN) = 0;
+                    HBar(iN,iM) = 0;
+                end
+            end
         end
         function Ebar = Ebar(obj,psi,Args)
             arguments
@@ -89,7 +176,7 @@ classdef baseFloquet < Calc.baseCalc
                 Args.normalize  logical = false
             end
             if Args.normalize
-                psi = psi ./ sqrt(norm(psi));
+                psi = psi ./ norm(psi);
             end
             Ebar = psi' * obj.h * psi;
         end
@@ -100,7 +187,7 @@ classdef baseFloquet < Calc.baseCalc
                 Args.normalize  logical = false
             end
             if Args.normalize
-                psi = psi ./ sqrt(norm(psi));
+                psi = psi ./ norm(psi);
             end
             eps = psi' * obj.hf * psi;
         end
@@ -111,14 +198,67 @@ classdef baseFloquet < Calc.baseCalc
                 Args.normalize  logical = false
             end
             if Args.normalize
-                psi = psi ./ sqrt(norm(psi));
+                psi = psi ./ norm(psi);
             end
-            thf = obj.hf;
             eps = obj.eps(psi);
-            varEps = psi' * thf * thf * psi - eps * eps;
+            varEps = psi' * obj.hf2 * psi - eps * eps;
         end
         function psi0 = Psi0(obj,psi)
-            psi0 = sum(permute(reshape(psi,obj.N, obj.k_max2, []),[1 3 2]),3);
+            psi0 = sum(obj.Psi_Fourier(psi),3);
+        end
+        function psi = Psi_Fourier(obj,psi)
+            switch ndims(psi)
+                case 2
+                    switch size(psi,1)
+                        case obj.N
+                            if size(psi,2) ~= obj.k_max2
+                                error('Wrong size psi:2');
+                            end
+                            psi = reshape(psi,obj.N,1,obj.k_max2);
+                        case obj.N * obj.k_max2
+                            psi = permute(reshape(psi,obj.N,obj.k_max2,[]),[1 3 2]);
+                        otherwise
+                            error('Unsupported size');
+                    end
+                case 3
+                    if size(psi,1) ~= obj.N
+                        error('Wrong size psi:1');
+                    end
+                    if size(psi,3) ~= obj.k_max2
+                        if size(psi,2) ~= obj.k_max2
+                            error('Wrong size psi:2');
+                        end
+                        psi = permute(psi,[1 3 2]);
+                    end
+                otherwise
+                    error('Unsupported dimensions')
+            end
+        end
+        function pk = Spectra(obj,psi,Args)
+            arguments
+                obj
+                psi
+                Args.E_range
+                Args.t_max
+            end
+            % SPECTRA Calculate energy spectra
+            % Currently only Fourier spectra is implemented
+
+            if isfield(Args,'E_range')
+                % TODO: Implement calculating energy spectra for specific
+                % energy values
+                error('Not implemented');
+                if isfield(Args,'t_max')
+                    % TODO: Implement calulating finite energy spectra
+                    error('Not implemented');
+                end
+            else
+                psi = obj.Psi_Fourier(psi);
+                pk = zeros(obj.k_max2,size(psi,2));
+                for ik=1:obj.k_max2
+                    pk(ik,:) = sqrt(diag(psi(:,:,ik)' * psi(:,:,ik)));
+                end
+            end
         end
         function [eps,Psi,Ebar] = eigs(obj,Args)
             arguments
@@ -152,17 +292,8 @@ classdef baseFloquet < Calc.baseCalc
             end
             %% Calculate the FAE eigenstates
             if nargout > 2
-                %% Construct the FAE operator
-                Hbar = Psi' * obj.h * Psi;
-                for iN = 1:obj.N-1
-                    for jN = iN+1:obj.N
-                        d_eps = eps(iN) - eps(jN);
-                        if abs(d_eps) < obj.xi; continue; end
-                        Hbar(iN,jN)=0;
-                        Hbar(jN,iN)=0;
-                    end
-                end
                 %% Calculate the FAE eigenstates
+                Hbar = obj.HBar(Psi,eps);
                 [Psi2,Ebar] = eig(Hbar,'vector');
                 Psi = Psi * Psi2;
                 eps = diag(Psi' * thf * Psi);
@@ -306,7 +437,7 @@ classdef baseFloquet < Calc.baseCalc
                     SubproblemAlgorithm='cg',...
 		            FunctionTolerance=Args.tol,OptimalityTolerance=Args.tol,...
 		            StepTolerance=Args.tol,ConstraintTolerance=Args.tol,...
-		            MaxIterations=30000,MaxFunctionEvaluations=300000,...
+		            MaxIterations=1E4,MaxFunctionEvaluations=1E5,...
 		            FiniteDifferenceType='central');
             end
             if ~isfield(Args,'ms')
@@ -443,7 +574,7 @@ classdef baseFloquet < Calc.baseCalc
                     SubproblemAlgorithm='cg',...
 		            FunctionTolerance=obj.xi,OptimalityTolerance=obj.xi,...
 		            StepTolerance=Args.tol,ConstraintTolerance=Args.tol,...
-		            MaxIterations=30000,MaxFunctionEvaluations=300000,...
+		            MaxIterations=1E4,MaxFunctionEvaluations=1E5,...
 		            FiniteDifferenceType='central');
             end
             if ~isfield(Args,'ms')
@@ -522,6 +653,47 @@ classdef baseFloquet < Calc.baseCalc
 		        ceq=tnorm-1;
             end
         end
+        function Psi=matchSize(obj,obj2,Psi2)
+            arguments
+                obj
+                obj2    Calc.baseFloquet
+                Psi2     double
+            end
+            minN = min(obj.N,obj2.N);
+            mink = min(obj.k_max,obj2.k_max);
+            switch ndims(Psi2)
+                case 3
+                    if size(Psi2,2) == obj2.k_max2
+                        permute(Psi2,[1 3 2]);
+                    end
+                    if size(Psi2,1) ~= obj2.N
+                        error('Wrong size dim:1');
+                    end
+                    if size(Psi2,3) ~= obj2.k_max2
+                        error('Wrong size dim:3');
+                    end
+                case 2
+                    switch size(Psi2,1)
+                        case obj2.N
+                            if size(Psi2,2) == obj2.k_max2
+                                permute(Psi2,[1 3 2]);
+                            end
+                            if size(Psi2,3) ~= obj2.k_max2
+                                error('Wrong size dim:3');
+                            end
+                        case obj2.N * obj2.k_max2
+                            Psi2 = permute(reshape(Psi2,obj2.N,obj2.k_max2,[]),[1 3 2]);
+                        otherwise
+                            error('Wrong sizes')
+                    end
+                otherwise
+                    error('Wrong dimensions')
+            end
+            M = size(Psi2,2);
+            Psi = zeros(obj.N,M,obj.k_max2);
+            Psi(1:minN,:,obj.k_max+1+(-mink:mink))=Psi2(1:minN,:,obj2.k_max+1+(-mink:mink));
+            Psi=reshape(permute(Psi,[1 3 2]),obj.N * obj.k_max2,M);
+        end
     end
     methods (Access=protected)
         function Res=variational_base(obj,fval,cons,Args,Flags)
@@ -543,9 +715,19 @@ classdef baseFloquet < Calc.baseCalc
                 tTypX = Args.TypX;
             else
 	            tTypX=ones(size(Args.Psi0,1),1);
+                maxE=nan;
+                for ik=1:obj.hk_max
+                    th = full(obj.h(1:obj.N,ik*obj.N+(1:obj.N)));
+                    th = th + th';
+                    tE = eig(th,'vector');
+                    tE = max(abs(tE));
+                    maxE = max(maxE,tE);
+                end
 	            tX=1;
-	            for k=obj.hk_max+3:obj.k_max-obj.hk_max
-		            tX=tX/k/obj.w;
+	            for k=3+obj.hk_max:obj.k_max
+		            tX = tX * (maxE/k/obj.w);
+                    tX = max(tX,1E-16);
+                    tX = min(tX,1);
 		            tTypX(obj.N*(obj.k_max+k)+(1:obj.N))=tX;
 		            tTypX(obj.N*(obj.k_max-k+1)+(-1:-1:-obj.N)+1)=tX;
 	            end
@@ -558,17 +740,22 @@ classdef baseFloquet < Calc.baseCalc
             % Trim the vectors
             Args.Psi0=Args.Psi0(~flag_end,:);
             tTypX=tTypX(~flag_end);
+            NPsi0 = size(Args.Psi0,2);
             %% Initialize minimization options
             if ~isfield(Args,'opts')
 	            Args.opts=optimoptions('fmincon',Algorithm='sqp',...
                     SubproblemAlgorithm='cg',...
 		            FunctionTolerance=obj.tol,OptimalityTolerance=obj.tol,...
 		            StepTolerance=Args.tol,ConstraintTolerance=Args.tol,...
-		            MaxIterations=30000,MaxFunctionEvaluations=300000,...
+		            MaxIterations=1E4,MaxFunctionEvaluations=1E5,...
 		            FiniteDifferenceType='central');
             end
             Args.opts=optimoptions(Args.opts,...
                 TypicalX=tTypX);
+            if NPsi0 == 1
+                Args.opts=optimoptions(Args.opts,...
+                    Display="iter");
+            end
             if ~isfield(Args,'ms')
 	            Args.ms=MultiStart(UseParallel=false,...
                     Display="iter",...
@@ -586,7 +773,6 @@ classdef baseFloquet < Calc.baseCalc
                     UseParallel=false);
             end
             %% Prepare output
-            NPsi0 = size(Args.Psi0,2);
             Res(NPsi0) = struct(Psi=[],steps=[],...
                 conv=false,Fval=nan,optim=nan);
             for iN = 1:NPsi0

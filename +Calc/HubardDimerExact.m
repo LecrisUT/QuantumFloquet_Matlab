@@ -20,7 +20,8 @@ classdef HubardDimerExact < Calc.baseFloquet
                 Args.v1     = 5
                 Args.xi     = 1E-3
             end
-            obj@Calc.baseFloquet(3,Args.w,Args.k_max,1,'xi',Args.xi);
+            obj@Calc.baseFloquet(3,Args.w,...
+                k_max=Args.k_max,hk_max=1,xi=Args.xi);
             obj.t = Args.t;
             obj.v0 = Args.v0;
             obj.v1 = Args.v1;
@@ -32,8 +33,11 @@ classdef HubardDimerExact < Calc.baseFloquet
                 'xi',obj.xi);
             json = jsonencode(S,varargin{:});
         end
-        function h = get.h(obj)
+        function h = get_h(obj)
             h = obj.h0 + obj.hU;
+        end
+        function ht = get_ht(obj)
+            error('Not implemented');
         end
         function h0 = get.h0(obj)
             h0 = [obj.v1/2  -sqrt(2)*obj.t   obj.v0   0 obj.v1/2;

@@ -56,6 +56,62 @@ classdef baseFloquet < Plot.basePlot
             Args2 = namedargs2cell(Args2);
             obj.postPlot(fg,ax,Args2{:});
         end
+        function [fg,ax] = Variational_varEps(obj,Res,Args,Args2)
+            arguments
+                obj
+                Res
+                Args.exact          logical
+                Args.filter_nconv   logical =true
+                Args2.File
+            end
+            % VARIATIONAL_OVERLAP Plot the 
+
+            %% Initialize basic figures
+            [fg,ax]=obj.prePlot;
+            %% Plot Data
+            iPlot = 0;
+            if ~isfield(Args,'exact')
+                if isfield(Res(1).steps(1),'Ex_varEps')
+                    Args.exact = true;
+                elseif isfield(Res(1).steps(1),'varEps')
+                    Args.exact = false;
+                else
+                    error('Missing field in Res.steps');
+                end
+            end
+            steps = 1:length(Res(1).steps);
+            steps = steps - 1;
+            max_steps = 0;
+            for iN=1:length(Res)
+                if Args.filter_nconv && ~Res(iN).conv; continue; end
+                iPlot = iPlot + 1;
+                iCol = mod(iPlot - 1, obj.nCol) + 1;
+                iMark = mod(iPlot - 1, obj.nMarks) + 1;
+                if Args.exact
+                    pData = [Res(iN).steps.Ex_varEps];
+                else
+                    pData = [Res(iN).steps.varEps];
+                end
+                ind = find(isnan(pData),1,"first");
+                if isempty(ind); ind = steps(end) + 1; end
+                max_steps = max(max_steps,ind-1);
+                plot(ax,steps,pData,...
+                    LineWidth=obj.marksLW,MarkerSize=obj.marksSize,...
+                    LineStyle='-',Color=obj.colorsFull(iCol,:),...
+                    Marker=obj.marksOrder{iMark});
+            end
+            %% Annotate
+            xlabel(ax,'Iterations',...
+                Interpreter='latex');
+            ylabel(ax,'Quasi-energy variance $\sigma_\epsilon$',...
+                Interpreter='latex');
+            xlim(ax,[0 max_steps]);
+%             yl = ylim(ax);
+%             ylim(ax,[0 yl(2)]);
+            %% Finish plot
+            Args2 = namedargs2cell(Args2);
+            obj.postPlot(fg,ax,Args2{:});
+        end
 
         function [fg,ax] = Energy(obj,V_range,w,Args)
             arguments
