@@ -7,9 +7,16 @@ classdef HubardDimerOrbital < Calc.baseFloquet
         psi     = []
     end
     properties (Dependent)
-        h
         hU
         h0
+    end
+    methods (Access=protected)
+        function h = get_h(obj)
+            h = obj.h0 + obj.hU;
+        end
+        function ht = get_ht(obj)
+            error('Not implemented');
+        end
     end
     methods
         function obj=HubardDimerOrbital(Args)
@@ -36,12 +43,6 @@ classdef HubardDimerOrbital < Calc.baseFloquet
             S.hubbard_dimer = struct('t',obj.t,'v0',obj.v0,'v1',obj.v1,...
                 'xi',obj.xi);
             json = jsonencode(S,varargin{:});
-        end
-        function h = get_h(obj)
-            h = obj.h0 + obj.hU;
-        end
-        function ht = get_ht(obj)
-            error('Not implemented');
         end
         function hU = get.hU(obj)
             % Update the Coulomb interaction

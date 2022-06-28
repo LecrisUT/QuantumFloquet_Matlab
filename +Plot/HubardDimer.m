@@ -24,7 +24,7 @@ classdef HubardDimer < Plot.basePlot
 
             
         end
-        function Theta(obj,Args)
+        function [fg,ax]=Theta(obj,Args)
             arguments
                 obj
                 Args.Exact
@@ -239,11 +239,11 @@ classdef HubardDimer < Plot.basePlot
                     pData = pData(:,:,iEigen);
                     for iN=1:N
                         plot(ax,U_range,pData(:,iN),obj.lineOrder{iN},...
-                            'LineWidth',obj.lineWidth,'Color',obj.colors3{iEigen});
+                            LineWidth=obj.lineWidth,Color=obj.colors3{iEigen});
                     end
                     nLegends = nLegends + 1;
                     lgds(nLegends) = plot(ax,nan,nan,obj.lineOrder{1},...
-                        'LineWidth',obj.lineWidth,'Color',obj.colors3{iEigen});
+                        LineWidth=obj.lineWidth,Color=obj.colors3{iEigen});
                     lgds_text{nLegends} = 'NSCF';
                 end
                 if isfield(Args,'FHF')
@@ -260,23 +260,28 @@ classdef HubardDimer < Plot.basePlot
                     for iN=1:N
                         iMark = mod(iN - 1, obj.nMarks) + 1;
                         plot(ax,U_range,pData(:,iN),...
-                            'LineWidth',obj.marksLW,'MarkerSize',obj.marksSize,...
-                            'LineStyle','none','Color',obj.colors3{iEigen},...
-                            'Marker',obj.marksOrder{iMark});
+                            LineWidth=obj.marksLW,MarkerSize=obj.marksSize,...
+                            LineStyle='none',Color=obj.colors3{iEigen},...
+                            Marker=obj.marksOrder{iMark});
                     end
                     nLegends = nLegends + 1;
                     lgds(nLegends) = plot(ax,nan,nan,obj.marksOrder{1},...
-                        'LineWidth',obj.marksLW,'Color',obj.colors3{iEigen});
+                        LineWidth=obj.marksLW,Color=obj.colors3{iEigen});
                     lgds_text{nLegends} = '$\phi$ Floquet HF';
                 end
                 %% Annotate
                 legend(ax,lgds,lgds_text,...
-                    'Location','north west',...
-                    'Interpreter','latex');
+                    Location='north west',...
+                    Interpreter='latex');
                 xlabel(ax,'Cuolomb interaction $U$',...
-                    'Interpreter','latex');
-                ylabel(ax,'Overlap',...
-                    'Interpreter','latex');
+                    Interpreter='latex');
+                if Args.merged
+                    ptext = 'Overlap $\vert\langle\langle\Phi_n\vert\Phi\rangle\rangle\vert$';
+                else
+                    ptext = sprintf('Overlap $\\vert\\langle\\langle\\Phi_%d\\vert\\Phi\\rangle\\rangle\\vert$',iEigen-1);
+                end
+                ylabel(ax,ptext,...
+                    Interpreter='latex');
                 ylim(ax,[0 1.1]);
                 xlim(ax,[xmin xmax]);
                 if Args.merged
@@ -285,7 +290,7 @@ classdef HubardDimer < Plot.basePlot
                     ptitle = sprintf('Overlap with exact eigenstate $\\Psi_%d$',iEigen-1);
                 end
                 title(ax,ptitle,...
-                    'Interpreter','latex');
+                    Interpreter='latex');
                 %% Finish plot
                 % Make File field to save to
                 subArgs = cell(1,0);

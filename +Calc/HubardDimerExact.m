@@ -6,9 +6,16 @@ classdef HubardDimerExact < Calc.baseFloquet
         U       = 0
     end
     properties (Dependent)
-        h
         hU
         h0
+    end
+    methods (Access=protected)
+        function h = get_h(obj)
+            h = obj.h0 + obj.hU;
+        end
+        function ht = get_ht(obj)
+            error('Not implemented');
+        end
     end
     methods
         function obj=HubardDimerExact(Args)
@@ -32,12 +39,6 @@ classdef HubardDimerExact < Calc.baseFloquet
             S.hubbard_dimer = struct('t',obj.t,'v0',obj.v0,'v1',obj.v1,...
                 'xi',obj.xi);
             json = jsonencode(S,varargin{:});
-        end
-        function h = get_h(obj)
-            h = obj.h0 + obj.hU;
-        end
-        function ht = get_ht(obj)
-            error('Not implemented');
         end
         function h0 = get.h0(obj)
             h0 = [obj.v1/2  -sqrt(2)*obj.t   obj.v0   0 obj.v1/2;
