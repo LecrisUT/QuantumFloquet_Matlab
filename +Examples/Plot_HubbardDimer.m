@@ -15,7 +15,7 @@ plotObj = Plot.HubardDimer(obj);
     Files={'PlotB31.png','PlotB31-1.png','PlotB31-2.png'});
 %% Manual plots
 [fg(6),ax(6)]=plotObj.prePlot;
-plot_data=abs(res_tdHF.Res(16,1).S_th2);
+plot_data=abs(res_tdHF.Res(16,1).S_th2(:,2));
 plot_data=min(plot_data,1);
 plot(ax(6),res_tdHF.t_range,plot_data,...
     LineWidth=1.0);
@@ -29,8 +29,8 @@ plotObj.postPlot(fg(6),ax(6),...
     File='PlotB32.png');
 %%
 [fg(7),ax(7)]=plotObj.prePlot;
-plot_data=abs(res_tdHF.Res(1,1).S_th2);
-% plot_data=min(plot_data,1);
+plot_data=abs(res_tdHF.Res(1,1).S_th2(:,2));
+plot_data=min(plot_data,1);
 plot(ax(7),res_tdHF.t_range,plot_data,...
     LineWidth=1.0);
 % yl=

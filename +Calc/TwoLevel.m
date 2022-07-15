@@ -1,167 +1,145 @@
 classdef TwoLevel < Calc.baseFloquet
+    % TwoLevel Driven two level system
+    % Type of Hamiltonian is controlled by RWA and type of purturbation by
+    % rand_v
+    % Hamiltonian with rotating wave approximation (RWA=true)
+    % $$H(t)=\mqty[\frac{\omega_0}{2}&\frac{V}{2}e^{-i\omega t}\\\frac{V}{2}e^{i\omega t}&&-\frac{\omega_0}{2}$$
+    % Hamiltonian without rotating wave approximation (RWA=false)
+    % $$H(t)=\mqty[\frac{\omega_0}{2}&V\cos(\omega t)\\V\cos(\omega t)&&-\frac{\omega_0}{2}$$
+    % The perturbation with rand_v=false
+    % $$v(t)=\mqty[0&v\\v&0]$$
+    % The perturbation with rand_v=true is a random time-periodic Hermitian
+    % operator
+    %
+    % See also Calc.baseFloquet
+
     properties
-        w0
-        v
-        V   = 0
+        % w0 - Undriven transition frequency $\omega_0$
+        w0      (1,1)   double  {mustBeReal,mustBePositive}
+        % v - Perturbation strength
+        % See also Calc.TwoLevel.rand_v
+        v       (1,1)   double  {mustBeReal}
+        % V - Driving strength
+        % See also Calc.TwoLevel.RWA
+        V       (1,1)   double  {mustBeReal,mustBePositive}
+        % rand_v - Flag to use random perturbation
+        % See also Calc.TwoLevel.v
+        rand_v  (1,1)   logical
+        % RWA - Flag to use rotating wave approximation
+        % Equivalent to using circularly polarized driving
+        % See also Calc.TwoLevel.rand_v
+        RWA     (1,1)   logical
+    end
+    methods (Access=protected)
+        function ht = get_ht(obj)
+            if obj.rand_v
+                ht = zeros(2,2,obj.hk_max2);
+                ht(:,:,obj.hk_max+1) = [obj.w0/2 0;0 -obj.w0/2];
+                if obj.RWA
+                    ht(:,:,obj.hk_max+1+1) = [0 obj.V/2;0 0];
+                else
+                    ht(:,:,obj.hk_max+1+1) = [0 obj.V/2;obj.V/2 0];
+                    ht(:,:,obj.hk_max+1-1) = ht(:,:,obj.hk_max+1+1)';
+                end
+                vt = obj.v/2 * rand(2,2,obj.hk_max2);
+                vt = vt + flip(pagectranspose(vt),3);
+                ht = ht + vt;
+            else
+                ht = zeros(2,2,3);
+                ht(:,:,2) = [obj.w0/2 obj.v;obj.v -obj.w0/2];
+                if obj.RWA
+                    ht(:,:,3) = [0 obj.V/2; 0 0];
+                    ht(:,:,1) = ht(:,:,3)';
+                else
+                    ht(:,:,3) = [0 obj.V/2; obj.V/2 0];
+                    ht(:,:,1) = ht(:,:,3)';
+                end
+            end
+        end
     end
     methods
-        function obj = TwoLevel(Args)
+        function obj = TwoLevel(Args,Args2)
             arguments
+                Args.RWA    = true
+                Args.rand_v = true
                 Args.w0     = 1
-                Args.w      = 1.5
-                Args.k_max  = 100
+                Args.V      = 0
                 Args.v      = 1E-4
-                Args.xi     = 1E-2
+                Args2.w     = 1.5
+                Args2.k_max = 100
+                Args2.xi    = 1E-2
             end
-            obj@Calc.baseFloquet(2,Args.w,...
-                k_max=Args.k_max,hk_max=1,xi=Args.xi);
+            % TwoLevel Constructor
+            %
+            % Syntax:
+            %   obj = TwoLevel(Name,Value)
+            % 
+            % Description:
+            %   obj = TwoLevel(Name,Value) Specify the parameters of the two-level
+            %   system via name-value pairs
+            %
+            % Inputs:
+            %   Name-Value pairs
+            %
+            % Outputs:
+            %   obj - Floquet object
+            %
+            % Name-value arguments:
+            %   RWA - [true] Whether to use Rotating Wave Approximation
+            %   rand_v - [true] Whether to use random perturbation
+            %   w0 - [1] Undriven transition frequency
+            %   V - [0] Driving strength
+            %   v - [0] Pertiurbation strength
+            %   w - [1.5] Driving frequency
+            %   k_max - [200] Fourier cut-off of Fourier coefficients
+            %   xi - [1E-2] Acceptable error
+            % 
+            % See also TwoLevel, baseFloquet
+            
+            if Args.v == 0
+                Args.rand_v = false;
+            end
+            if Args.rand_v
+                Args2.hk_max = 10;
+            else
+                Args2.hk_max = 1;
+            end
+            Args2 = namedargs2cell(Args2);
+            obj@Calc.baseFloquet(2,Args2{:});
             obj.w0 = Args.w0;
             obj.v = Args.v;
+            obj.rand_v = Args.rand_v;
+            obj.RWA = Args.RWA;
         end
+    end
+    methods
+        function set.w0(obj,val)
+            obj.w0 = val;
+            obj.dirty_cache = true;
+        end
+        function set.v(obj,val)
+            obj.v = val;
+            obj.dirty_cache = true;
+        end
+        function set.V(obj,val)
+            obj.V = val;
+            obj.dirty_cache = true;
+        end
+        function set.rand_v(obj,val)
+            obj.rand_v = val;
+            obj.dirty_cache = true;
+        end
+        function set.RWA(obj,val)
+            obj.RWA = val;
+            obj.dirty_cache = true;
+        end
+    end
+    methods
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);
             S = jsondecode(j);
             S.two_level = struct('w0',obj.w0,'v',obj.v,'xi',obj.xi,'V',obj.V);
             json = jsonencode(S,varargin{:});
-        end
-        function h = get_h(obj)
-            hdiag=[obj.v      obj.w0/2  obj.V/2;
-                   obj.V/2   -obj.w0/2  obj.v];
-	        hdiag = repmat(hdiag,obj.k_max2,1);
-	        h = spdiags(hdiag,-1:1,2*obj.k_max2,2*obj.k_max2);
-        end
-        function ht = get_ht(obj)
-            error('Not implemented');
-        end
-        function Res=variational(obj,method,Args,Flags,Args2)
-            arguments
-                obj
-                method
-                Args.opts
-                Args.Psi0
-                Args.TypX
-		        Args.tol	(1,1)	double	=1E-10
-		        Args.filter_nconv	logical
-                Args.functions
-                Flags.TrackPsi       logical
-                Args2.th_range      (1,:)   double
-            end
-            if isfield(Args2,'th_range')
-                Args.Psi0=[cos(Args2.th_range);sin(Args2.th_range)];
-            end
-            Args = namedargs2cell(Args);
-            Flags = namedargs2cell(Flags);
-            Res = variational@Calc.baseFloquet(obj,method,Args{:},Flags{:});
-        end
-        function Res = AEEigs(obj,V_range,Args)
-            arguments
-                obj
-                V_range
-                Args.Print  = true
-            end
-            nV = length(V_range);
-            Res(nV,obj.N) = struct('Psi',[],'eps',[],'Ebar',[]);
-            for iV=1:nV
-	            obj.V=V_range(iV);
-                hf = obj.hf;
-                [tPsi,teps] = eigs(hf,obj.N,0);
-                teps = diag(teps);
-                Hbar = obj.HBar(tPsi,teps);
-                [ttPsi,tEbar] = eig(Hbar,'vector');
-                tPsi = tPsi * ttPsi;
-                tPsi0 = obj.Psi0(tPsi);
-                teps = diag(tPsi' * hf * tPsi);
-                if iV == 1
-                    [tEbar,ind] = sort(tEbar);
-                    teps = teps(ind);
-                    tPsi = tPsi(:,ind);
-                    tPsi0 = tPsi0(:,ind);
-                else
-                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
-                    % Check if overlap is too small to adiabatically
-                    % continue
-                    if ~isempty(find(abs(1-mval)>1E-1, 1))
-                        warning('Overlap is too small');
-                    end
-                    % Check if missing values
-                    if length(perm) ~= length(unique(perm))
-                        error('Missing permutation index');
-                    end
-                    % Reorder to permute properly
-                    [~,perm] = sort(perm);
-	                tPsi = tPsi(:,perm);
-	                teps = teps(perm);
-	                tEbar=tEbar(perm);
-	                tPsi0 = tPsi0(:,perm);
-	                dk = round((teps-teps_prev) / obj.w);
-                    for iN = 1:obj.N
-		                tdk = dk(iN);
-                        tPsi(:,iN) = circshift(tPsi(:,iN),obj.N * tdk,2);
-		                teps(iN) = teps(iN) - tdk * obj.w;
-                    end
-                end
-                for iN = 1:obj.N
-                    Res(iV,iN).Psi=tPsi(:,iN);
-                    Res(iV,iN).eps=teps(iN);
-                    Res(iV,iN).Ebar=tEbar(iN);
-                end
-                teps_prev=teps;
-                tPsi0_prev=tPsi0;
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iV,length(V_range));
-                end
-            end
-        end
-        function Res = QEEigs(obj,V_range,Args)
-            arguments
-                obj
-                V_range
-                Args.Print  = true
-            end
-            nV = length(V_range);
-            Res(nV,obj.N) = struct('Psi',[],'eps',[]);
-            for iV=1:nV
-	            obj.V=V_range(iV);
-                [tPsi,teps] = eigs(obj.hf,obj.N,0);
-                teps = diag(teps);
-                tPsi0 = obj.Psi0(tPsi);
-                if iV == 1
-                    [teps,ind] = sort(teps);
-                    tPsi = tPsi(:,ind);
-                    tPsi0 = tPsi0(:,ind);
-                else
-                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
-                    % Check if overlap is too small to adiabatically
-                    % continue
-                    if ~isempty(find(abs(1-mval)>1E-1, 1))
-                        warning('Overlap is too small');
-                    end
-                    % Check if missing values
-                    if length(perm) ~= length(unique(perm))
-                        error('Missing permutation index');
-                    end
-                    % Reorder to permute properly
-                    [~,perm] = sort(perm);
-	                tPsi = tPsi(:,perm);
-	                teps = teps(perm);
-	                tPsi0 = tPsi0(:,perm);
-	                dk = round((teps-teps_prev) / obj.w);
-                    for iN = 1:obj.N
-		                tdk = dk(iN);
-                        tPsi(:,iN) = circshift(tPsi(:,iN),obj.N * tdk,2);
-		                teps(iN) = teps(iN) - tdk * obj.w;
-                    end
-                end
-                for iN = 1:obj.N
-                    Res(iV,iN).Psi=tPsi(:,iN);
-                    Res(iV,iN).eps=teps(iN);
-                end
-                teps_prev=teps;
-                tPsi0_prev=tPsi0;
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iV,length(V_range));
-                end
-            end
         end
     end
 end

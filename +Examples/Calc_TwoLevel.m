@@ -1,11 +1,15 @@
 clc; clear all;
 w0=1; w=1.5;
 del=w-w0;
-Unpert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=0,xi=1E-12);
-Pert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=1E-4,xi=1E-2);
-fine_tune(1) = struct(Vc=sqrt(w^2-del^2)+1E-15, delV=4E-4, nV=1001,...
+Unpert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=0,xi=1E-12,...
+    RWA=true,rand_v=false);
+Pert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=1E-4,xi=1E-2,...
+    RWA=true,rand_v=false);
+fine_tune(1) = struct(Vc=sqrt(w^2-del^2), delV=4E-4, nV=1001,...
     V_range=[]);
-fine_tune(2) = struct(Vc=sqrt(4*w^2-del^2)+1E-15, delV=4E-4, nV=1001,...
+fine_tune(2) = struct(Vc=sqrt(4*w^2-del^2), delV=1E-6, nV=1001,...
+    V_range=[]);
+fine_tune(3) = struct(Vc=sqrt(9*w^2-del^2)-2.75E-9, delV=1E-10, nV=1001,...
     V_range=[]);
 nV=501;
 V_range=linspace(0,5,nV);
@@ -23,33 +27,61 @@ Details = Calc.Details(script='Calc_TwoLevel.m',...
     objects=[Pert,Unpert],...
     variables=struct(V_range=V_range,fine_tune=fine_tune));
 %% Calculate eigenstates
-Res_Unpert_AE = Unpert.AEEigs(V_range);
-Res_Unpert_QE = Unpert.QEEigs(V_range);
-Res_Pert_AE = Pert.AEEigs(V_range);
-Res_Pert_QE = Pert.QEEigs(V_range);
-%% PostProcess
-k_max2 = Unpert.k_max2;
-for iV = 1:nV
-    for iN = 1:2
-        Res_Pert_AE(iV,iN).P = zeros(k_max2,1);
-        Res_Pert_QE(iV,iN).P = zeros(k_max2,1);
-        Res_Unpert_AE(iV,iN).P = zeros(k_max2,1);
-        Res_Unpert_QE(iV,iN).P = zeros(k_max2,1);
-        tPsi1 = reshape(Res_Pert_AE(iV,iN).Psi,2,[]);
-        tPsi2 = reshape(Res_Pert_QE(iV,iN).Psi,2,[]);
-        tPsi3 = reshape(Res_Unpert_AE(iV,iN).Psi,2,[]);
-        tPsi4 = reshape(Res_Unpert_QE(iV,iN).Psi,2,[]);
-        for ik = 1:k_max2
-            Res_Pert_AE(iV,iN).P(ik) = tPsi1(:,ik)' * tPsi1(:,ik);
-            Res_Pert_QE(iV,iN).P(ik) = tPsi2(:,ik)' * tPsi2(:,ik);
-            Res_Unpert_AE(iV,iN).P(ik) = tPsi3(:,ik)' * tPsi3(:,ik);
-            Res_Unpert_QE(iV,iN).P(ik) = tPsi4(:,ik)' * tPsi4(:,ik);
-        end
-    end
-end
+% Adiabatically continue from static eigenstates
+Psi0 = [0 1;1 0];
+eps0 = [-w0/2;w0/2];
+iter=Calc.GenericCalcIterator(Unpert,data=V_range,updatefcn=@AdiabaticV);
+iter.reset;
+[tPsi,teps,tEbar] = Unpert.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_Unpert_AE = PackRes(Unpert,tPsi,teps,Ebar=tEbar);
+iter.reset;
+[tPsi,teps] = Unpert.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_Unpert_QE = PackRes(Unpert,tPsi,teps);
+iter=Calc.GenericCalcIterator(Pert,data=V_range,updatefcn=@AdiabaticV);
+iter.reset;
+[tPsi,teps,tEbar] = Pert.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_Pert_AE = PackRes(Pert,tPsi,teps,Ebar=tEbar);
+iter.reset;
+[tPsi,teps] = Pert.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_Pert_QE = PackRes(Pert,tPsi,teps);
 %% Save results
 save('Calc_TwoLevel.mat',...
     'Res_Unpert_QE','Res_Unpert_AE',...
     'Res_Pert_QE','Res_Pert_AE',...
     'Details',...
     '-v7.3');
+%% Helper functions
+function AdiabaticV(obj)
+    obj.object.V = obj.data(obj.ind);
+end
+function Res = PackRes(obj,Psi,eps,Args)
+    arguments
+        obj
+        Psi
+        eps
+        Args.Ebar
+    end
+    M = size(Psi,2);
+    L = size(Psi,3);
+    Res(L,M) = struct(Psi=[],eps=[],P=[]);
+    for iL = 1:L
+        tPsi = obj.Psi_Fourier(Psi(:,:,iL));
+        for iM = 1:M
+            %% Pack calculated results
+            Res(iL,iM).Psi = Psi(:,iM,iL);
+            Res(iL,iM).eps = eps(iM,iL);
+            if isfield(Args,'Ebar')
+                Res(iL,iM).Ebar = Args.Ebar(iM,iL);
+            end
+            %% Other PostProcess
+            Res(iL,iM).P = zeros(obj.k_max2,1);
+            for ik = 1:obj.k_max2
+                Res(iL,iM).P(ik) = tPsi(:,iM,ik)' * tPsi(:,iM,ik);
+            end
+        end
+    end
+end

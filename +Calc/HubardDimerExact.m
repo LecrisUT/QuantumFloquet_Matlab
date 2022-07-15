@@ -18,17 +18,18 @@ classdef HubardDimerExact < Calc.baseFloquet
         end
     end
     methods
-        function obj=HubardDimerExact(Args)
+        function obj=HubardDimerExact(Args,Args2)
             arguments
                 Args.t      = 1
-                Args.w      = 1.5
-                Args.k_max  = 100
                 Args.v0     = 2
                 Args.v1     = 5
-                Args.xi     = 1E-3
+                Args2.w      = 1.5
+                Args2.k_max  = 100
+                Args2.xi     = 1E-3
             end
-            obj@Calc.baseFloquet(3,Args.w,...
-                k_max=Args.k_max,hk_max=1,xi=Args.xi);
+            Args2.hk_max = 1;
+            Args2 = namedargs2cell(Args2);
+            obj@Calc.baseFloquet(3,Args2{:});
             obj.t = Args.t;
             obj.v0 = Args.v0;
             obj.v1 = Args.v1;
@@ -51,80 +52,6 @@ classdef HubardDimerExact < Calc.baseFloquet
             hU = [obj.U;0;obj.U];
             hU = repmat(hU,obj.k_max2,1);
             hU = spdiags(hU, 0, obj.N*obj.k_max2, obj.N*obj.k_max2);
-        end
-        function Res=eigs(obj,U_range,Args)
-            arguments
-                obj
-                U_range
-                Args.saveFile
-                Args.loadFile
-                Args.xi     = 1E-4
-                Args.tol    = 1E-12
-                Args.th_range
-                Args.Psi0   = [1;0]
-                Args.Print  = true
-            end
-
-            %% Calculate the non-SCF solutions
-            nU = length(U_range);
-            if isfield(Args,'loadFile')
-                iU = load(Args.loadFile,'iU');
-                Res = load(Args.loadFile,'Res');
-            else
-                Res(nU,obj.N) = struct('Psi',[],'eps',[],'Ebar',[],'th',[],'S',[]);
-                iU = 1;
-            end
-            th=zeros(2,3);
-            S=zeros(2,3);
-            for iU = iU:nU
-                obj.U = U_range(iU);
-                %% Calculate the AE eigenstates
-                % Add adiabatic arguments if possible
-                subArgs={};
-                if iU > 1
-                    Psi_prev = reshape([Res(iU-1,:).Psi],[],obj.N);
-                    eps_prev = [Res(iU-1,:).eps];
-                    subArgs = [subArgs(:)',{'Psi_prev'},{Psi_prev},{'eps_prev'},{eps_prev}];
-                end
-                [eps,Psi,Ebar] = eigs@Calc.baseFloquet('eps0',0,subArgs{:});
-                Psi0 = obj.Psi0(Psi);
-                % Fix the phase
-                for iN=1:obj.N
-                    if Psi0(1,iN)<0
-                        Psi(:,iN) = -Psi(:,iN);
-                        Psi0(:,iN) = -Psi0(:,iN);
-                    end
-                end
-                %% Find the closest slater determinant
-                for iN = 1:N
-                    [th(:,iN),S(:,iN)] = obj.SlaterDecomp(Psi0);
-                    if iU == 1
-                        [S(:,iN),ind] = sort(S(:,iN),'descend');
-                        th(:,iN) = th(ind,iN);
-                    else
-                        th_prev = Res(iU-1,iN).th;
-                        dth = abs(mod(th(:,iN) - th_prev(1) + pi/2,pi) - pi/2);
-                        [~,ind]=sort(dth,'ascend');
-                        S(:,iN) = S(ind,iN);
-                        th(:,iN) = th(ind,iN);
-                    end
-                end
-
-                %% Save the results
-                for iN = 1:obj.N
-                    Res(iU,iN).Psi = Psi(:,iN);
-                    Res(iU,iN).eps = eps(iN);
-                    Res(iU,iN).Ebar = Ebar(iN);
-                    Res(iU,iN).th = th(:,iN);
-                    Res(iU,iN).S = S(:,iN);
-                end
-                if isfield(Args,'saveFile')
-                    save(Args.saveFile,'Res','iU','obj','-v7.3');
-                end
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iU,nU);
-                end
-            end
         end
         function [th,S]=SlaterDecomp(~,Psi0)
 	        opts=optimoptions('fmincon','Algorithm','interior-point');

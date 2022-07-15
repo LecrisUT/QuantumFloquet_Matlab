@@ -1,8 +1,10 @@
 clc; clear all;
 w0=1;w=1.5;v=1E-6;
 xi=1E-3; tol=1E-12;
-Unpert = Calc.TwoLevelNonRWA(w0=w0,w=w,k_max=100,v=0,xi=tol);
-Pert = Calc.TwoLevelNonRWA(w0=w0,w=w,k_max=100,v=v,xi=xi);
+Unpert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=0,xi=tol,...
+    RWA=false,rand_v=true);
+Pert = Calc.TwoLevel(w0=w0,w=w,k_max=100,v=v,xi=xi,...
+    RWA=false,rand_v=true);
 V = 1.7035769013796129;
 Unpert.V = V;
 Pert.V = V;
@@ -15,22 +17,23 @@ Details = Calc.Details(script='Calc_TwoLevelNonRWA2.m',...
     objects=[Pert,Unpert],...
     variables=struct(V=V,th_range=th_range));
 %% Calculate exact eigenstates
-[Res_Ex.eps,Res_Ex.Psi,Res_Ex.Ebar] = Unpert.eigs;
+[Res_Ex.Psi,Res_Ex.eps,Res_Ex.Ebar] = Unpert.eigs;
 %% Calculate eigenstates
+Psi0=[cos(th_range);sin(th_range)];
 fprintf('(Unpert) Doing AE variational principle:\n');tic;
-Res_Unpert_AE = Unpert.variational('AE',th_range=th_range,...
+Res_Unpert_AE = Unpert.variational('AE',Psi0=Psi0,...
     TrackPsi=true,filter_nconv=false,tol=tol);
 fprintf('(Unpert) Done AE method: %f (s)\n',toc);
 fprintf('(Unpert) Doing QE variance variational principle:\n');tic;
-Res_Unpert_QE = Unpert.variational('varQE',th_range=th_range,...
+Res_Unpert_QE = Unpert.variational('varQE',Psi0=Psi0,...
     TrackPsi=true,filter_nconv=false,tol=tol);
 fprintf('(Unpert) Done QE method: %f (s)\n',toc);
 fprintf('(Pert) Doing AE variational principle:\n');tic;
-Res_Pert_AE = Pert.variational('AE',th_range=th_range,...
+Res_Pert_AE = Pert.variational('AE',Psi0=Psi0,...
     TrackPsi=true,filter_nconv=false,tol=tol);
 fprintf('(Pert) Done AE method: %f (s)\n',toc);
 fprintf('(Pert) Doing QE variance variational principle:\n');tic;
-Res_Pert_QE = Pert.variational('varQE',th_range=th_range,...
+Res_Pert_QE = Pert.variational('varQE',Psi0=Psi0,...
     TrackPsi=true,filter_nconv=false,tol=tol);
 fprintf('(Pert) Done QE method: %f (s)\n',toc);
 %% PostProcess

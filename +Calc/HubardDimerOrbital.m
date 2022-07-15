@@ -19,23 +19,22 @@ classdef HubardDimerOrbital < Calc.baseFloquet
         end
     end
     methods
-        function obj=HubardDimerOrbital(Args)
+        function obj=HubardDimerOrbital(Args,Args2)
             arguments
                 Args.t      = 1
-                Args.w      = 1.5
-                Args.k_max  = 100
-                Args.hk_max = 30
                 Args.v0     = 2
                 Args.v1     = 5
-                Args.xi     = 1E-3
+                Args2.w      = 1.5
+                Args2.k_max  = 100
+                Args2.hk_max = 30
+                Args2.xi     = 1E-3
             end
-            obj@Calc.baseFloquet(2,Args.w,...
-                k_max=Args.k_max,hk_max=Args.hk_max,...
-                xi=Args.xi,cacheMat=false);
+            Args2.cacheMat = false;
+            Args2=namedargs2cell(Args2);
+            obj@Calc.baseFloquet(2,Args2{:});
             obj.t = Args.t;
             obj.v0 = Args.v0;
             obj.v1 = Args.v1;
-            obj.xi = Args.xi;
         end
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);

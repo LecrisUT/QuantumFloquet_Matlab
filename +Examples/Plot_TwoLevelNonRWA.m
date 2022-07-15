@@ -3,6 +3,7 @@ close all;
 %% Load data
 Calc1=load('Calc_TwoLevelNonRWA.mat');
 Calc2=load('Calc_TwoLevelNonRWA2.mat');
+Calc3=load('Calc_TwoLevelNonRWA3.mat');
 w = Calc1.Details.objects(1).w;
 k_max2 = Calc1.Details.objects(1).k_max2;
 V_range = Calc1.Details.variables.V_range;
@@ -55,3 +56,10 @@ plotObj.calcObj=Calc2.Details.objects(1);
     File='PlotB24-4.png',normalized=true);
 [fg(15),ax(15)] = plotObj.Variational_Overlap(Calc2.Res_Pert_QE,1,...
     File='PlotB24-5.png',normalized=true);
+%% Plot Calc3
+plotObj.calcObj=Calc3.Details.objects(1);
+overlap = reshape([Calc3.Res_10B.OverlapMeasure],3,[]);
+[fg(16),ax(16)] = plotObj.SteadyState(Calc3.Details.variables.V_range,...
+    rhoz=[Calc3.Res_10B.rhoz],...
+    overlapM=[Calc3.Res_0K.OverlapMeasure2],...
+    File='PlotB34.png');

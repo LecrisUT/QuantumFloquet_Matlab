@@ -1,7 +1,7 @@
 clc; clear all;
-w=8.3;
+w=8.3; N = 20;
 xi=1E-2; tol=1E-12;
-obj = Calc.BoxParticle(20,w=w,k_max=200,xi=1E-12);
+obj = Calc.BoxParticle(N,w=w,k_max=200,xi=1E-12);
 fine_tune(1) = struct(Vc=48.97, delV=1E-1, nV=41,...
     V_range=[]);
 fine_tune(2) = struct(Vc=34.08, delV=1E-1, nV=41,...
@@ -24,24 +24,52 @@ Details = Calc.Details(script='Calc_BoxParticle.m',...
     objects=obj,...
     variables=struct(V_range=V_range,fine_tune=fine_tune));
 %% Calculate eigenstates
-Res_AE = obj.AEEigs(V_range);
-Res_QE = obj.QEEigs(V_range);
+% Adiabatically continue from static eigenstates
+Psi0 = eye(N);
+eps0 = (1:N).^2;
+iter=Calc.GenericCalcIterator(obj,data=V_range,updatefcn=@AdiabaticV);
+iter.reset;
+[tPsi,teps,tEbar] = obj.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_AE = PackRes(obj,tPsi,teps,Ebar=tEbar);
+iter.reset;
+[tPsi,teps] = obj.eigs(iterator=iter,...
+    Psi_prev=Psi0,eps_prev=eps0);
+Res_QE = PackRes(obj,tPsi,teps);
 %% PostProcess
-k_max2 = obj.k_max2;
-for iV = 1:nV
-    for iN = 1:2
-        Res_AE(iV,iN).P = zeros(k_max2,1);
-        Res_QE(iV,iN).P = zeros(k_max2,1);
-        tPsi1 = reshape(Res_AE(iV,iN).Psi,obj.N,[]);
-        tPsi2 = reshape(Res_QE(iV,iN).Psi,obj.N,[]);
-        for ik = 1:k_max2
-            Res_AE(iV,iN).P(ik) = tPsi1(:,ik)' * tPsi1(:,ik);
-            Res_QE(iV,iN).P(ik) = tPsi2(:,ik)' * tPsi2(:,ik);
-        end
-    end
-end
 %% Save results
 save('Calc_BoxParticle.mat',...
     'Res_QE','Res_AE',...
     'Details',...
     '-v7.3');
+%% Helper functions
+function AdiabaticV(obj)
+    obj.object.V = obj.data(obj.ind);
+end
+function Res = PackRes(obj,Psi,eps,Args)
+    arguments
+        obj
+        Psi
+        eps
+        Args.Ebar
+    end
+    M = size(Psi,2);
+    L = size(Psi,3);
+    Res(L,M) = struct(Psi=[],eps=[],P=[]);
+    for iL = 1:L
+        tPsi = obj.Psi_Fourier(Psi(:,:,iL));
+        for iM = 1:M
+            %% Pack calculated results
+            Res(iL,iM).Psi = Psi(:,iM,iL);
+            Res(iL,iM).eps = eps(iM,iL);
+            if isfield(Args,'Ebar')
+                Res(iL,iM).Ebar = Args.Ebar(iM,iL);
+            end
+            %% Other PostProcess
+            Res(iL,iM).P = zeros(obj.k_max2,1);
+            for ik = 1:obj.k_max2
+                Res(iL,iM).P(ik) = tPsi(:,iM,ik)' * tPsi(:,iM,ik);
+            end
+        end
+    end
+end

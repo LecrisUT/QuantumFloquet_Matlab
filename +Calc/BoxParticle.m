@@ -1,8 +1,26 @@
 classdef BoxParticle < Calc.baseFloquet
+    % BoxParticle 1D Driven particle in a box
+    % <latex>
+    % \begin{align}
+    % H(x,t)&=-\frac{1}{2}\partial_x^2+V_0(x)+V\sin(\frac{\pi x}{2a})\cos(\omega t)\\
+    % V_0(x)&=\begin{cases}
+    % 0&\quad\text{if}\;\abs{x}\leq a\\
+    % \inf&\quad\text{if}\;\abs{x}>a
+    % \end{cases}
+    % \end{align}
+    % </latex>
+    % The system is normalized so that _a_=1.
+    % The Hamiltonian and wave functions are projected onto the static
+    % eigensates. See BoxParticle.Psix.
+    %
+    % See also Calc.BoxParticle.Psix
+
     properties
-        V   = 0
+        % V - Driving strength
+        % See also BoxParticle
+        V   (1,1)   double  {mustBeReal}
     end
-    methods (Access=protected)
+    methods (Hidden,Access=protected)
         function ht = get_ht(obj)
             ht = zeros(obj.N,obj.N,3);
             ht(:,:,2) = diag((1:obj.N).^2);
@@ -12,34 +30,47 @@ classdef BoxParticle < Calc.baseFloquet
             ht(:,:,3) = diag(th1,1)+diag(th1,-1);
             ht(:,:,1) = ht(:,:,3)';
         end
-        function h = get_h(obj)
-            % Build Hamiltonian primitives
-            % Column1: Non-interacting diagonal E_n=n^2*E_0
-            % Column2: Driving of form [1 -1 1 -1 ...]
-            h = [(1:obj.N).^2' ones(obj.N,1)];
-            h(2:2:end,2) = -1;
-            % Build the Hamiltonian diagonals
-            h = [obj.V/4*[h(1:end-1,2);0],...
-                obj.V/4*[0;h(1:end-1,2)],...
-                h(:,1),...
-                obj.V/4*[h(1:end-1,2);0],...
-                obj.V/4*[0;h(1:end-1,2)]];
-            % Extend the Hamiltonian diagonals
-            h = repmat(h,obj.k_max2,1);
-            h = spdiags(h,[-obj.N-1 -obj.N+1 0 obj.N-1 obj.N+1],...
-                obj.N*obj.k_max2,obj.N*obj.k_max2);
-        end
     end
     methods
-        function obj = BoxParticle(N,Args)
+        function obj = BoxParticle(N,Args,Args2)
             arguments
                 N
-                Args.w      = 8.3
-                Args.k_max  = 200
-                Args.xi     = 1E-2
+                Args.V      = 0
+                Args2.w     = 8.3
+                Args2.k_max = 200
+                Args2.xi    = 1E-2
             end
-            obj@Calc.baseFloquet(N,Args.w,...
-                k_max=Args.k_max,hk_max=1,xi=Args.xi);
+            % BoxParticle Constructor
+            %
+            % Syntax:
+            %   obj = BoxParticle(N)
+            %   [___] = BoxParticle(___,Name,Value)
+            % 
+            % Description:
+            %   obj = BoxParticle(N) Constructs a driven particle in a box object with
+            %   Hilbert space cut off at N
+            %   [___] = BoxParticle(___,Name,Value) specifies options using name-value
+            %   arguments in addition to any of the input arguments in previous
+            %   syntaxes.
+            %
+            % Inputs:
+            %   N - Hilbert space cut-off of a particle in a box Hamiltonian
+            %   Name-Value pairs
+            %
+            % Outputs:
+            %   obj - Floquet object
+            %
+            % Name-value arguments:
+            %   V - [0] Driving strength
+            %   w - [8.3] Driving frequency
+            %   k_max - [200] Fourier cut-off of Fourier coefficients
+            %   xi - [1E-2] Acceptable error
+            % 
+            % See also BoxParticle, baseFloquet
+
+            Args2 = namedargs2cell(Args2);
+            obj@Calc.baseFloquet(N,Args2{:});
+            obj.V = Args.V;
         end
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);
@@ -47,123 +78,76 @@ classdef BoxParticle < Calc.baseFloquet
             S.box_particle = struct('xi',obj.xi,'V',obj.V);
             json = jsonencode(S,varargin{:});
         end
-        function Res = AEEigs(obj,V_range,Args)
-            arguments
-                obj
-                V_range
-                Args.Print  = true
-            end
-            nV = length(V_range);
-            Res(nV,obj.N) = struct('Psi',[],'eps',[],'Ebar',[]);
-            for iV=1:nV
-	            obj.V=V_range(iV);
-                hf = obj.hf;
-                try
-                    [tPsi,teps] = eigs(hf,obj.N,0);
-                catch
-                    [tPsi,teps] = eigs(hf,obj.N,1E-12);
-                end
-                teps = diag(teps);
-                Hbar = obj.HBar(tPsi,teps);
-                [ttPsi,tEbar] = eig(Hbar,'vector');
-                tPsi = tPsi * ttPsi;
-                tPsi0 = obj.Psi0(tPsi);
-                teps = diag(tPsi' * hf * tPsi);
-                if iV == 1
-                    [tEbar,ind] = sort(tEbar);
-                    teps = teps(ind);
-                    tPsi = tPsi(:,ind);
-                    tPsi0 = tPsi0(:,ind);
-                else
-                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
-                    % Check if overlap is too small to adiabatically
-                    % continue
-                    if ~isempty(find(abs(1-mval)>1E-1, 1))
-                        warning('Overlap is too small');
-                    end
-                    % Check if missing values
-                    if length(perm) ~= length(unique(perm))
-                        error('Missing permutation index');
-                    end
-                    % Reorder to permute properly
-                    [~,perm] = sort(perm);
-	                tPsi = tPsi(:,perm);
-	                teps = teps(perm);
-	                tEbar = tEbar(perm);
-	                tPsi0 = tPsi0(:,perm);
-	                dk = round((teps-teps_prev) / obj.w);
-                    for iN = 1:obj.N
-		                tdk = dk(iN);
-                        tPsi(:,iN) = circshift(tPsi(:,iN),obj.N * tdk,2);
-		                teps(iN) = teps(iN) - tdk * obj.w;
-                    end
-                end
-                for iN = 1:obj.N
-                    Res(iV,iN).Psi=tPsi(:,iN);
-                    Res(iV,iN).eps=teps(iN);
-                    Res(iV,iN).Ebar=tEbar(iN);
-                end
-                teps_prev=teps;
-                tPsi0_prev=tPsi0;
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iV,length(V_range));
-                end
-            end
+        function set.V(obj,val)
+            obj.V = val;
+            obj.dirty_cache = true;
         end
-        function Res = QEEigs(obj,V_range,Args)
+        function Psix = Psix(obj,Psi,x,Args,Args2)
             arguments
-                obj
-                V_range
-                Args.Print  = true
+                obj     Calc.BoxParticle
+                Psi     double
+                x       (1,1,:) double
+                Args.t
+                Args.a      (1,1)   double  =1
+                Args2.eps
             end
-            nV = length(V_range);
-            Res(nV,obj.N) = struct('Psi',[],'eps',[]);
-            for iV=1:nV
-	            obj.V=V_range(iV);
-                try
-                    [tPsi,teps] = eigs(obj.hf,obj.N,0);
-                catch
-                    [tPsi,teps] = eigs(obj.hf,obj.N,1E-12);
-                end
-                teps = diag(teps);
-                tPsi0 = obj.Psi0(tPsi);
-                if iV == 1
-                    [teps,ind] = sort(teps);
-                    tPsi = tPsi(:,ind);
-                    tPsi0 = tPsi0(:,ind);
+            % Psix Project the wave function onto position basis
+            % <latex>
+            % \begin{gather}
+            % \varphi_n(t)=\begin{cases}
+            % 1/\sqrt{a}\cos(\frac{n\pi x}{2a})&\quad\text{if}\;n\,\text{odd}\\
+            % 1/\sqrt{a}\sin(\frac{n\pi x}{2a})&\quad\text{if}\;n\,\text{even}\\
+            % \end{cases}
+            % \end{gather}
+            % </latex>
+            % 
+            % Syntax:
+            %   Psix = Psix(Psi,x)
+            %   [___] = Psix(___,Name,Value)
+            % 
+            % Description:
+            %   Psix = Psix(Psi,x) Project the wave function Psi onto the position
+            %   basis set at points x
+            %   [___] = Psix(___,Name,Value) specifies options using name-value
+            %   arguments in addition to any of the input arguments in previous
+            %   syntaxes.
+            % 
+            % Inputs:
+            %   Psi - Wave function
+            %   x - Position points
+            %   Name-Value pairs
+            %
+            % Outputs:
+            %   Psix - Projected wave function
+            %
+            % Name-value arguments:
+            %   a - [1] Position renormalization constant
+            %   t - Time parameter. Calculate the wave function at times t instead of
+            %   Fourier representation
+            %   eps - Quasi-energies
+            %   
+            % See also baseFloquet.Psit
+
+            nx = length(x);
+            if isfield(Args,'t')
+                Args2 = namedargs2cell(Args2);
+                Psi = obj.Psit(Psi,t,Args2{:});
+            else
+                Psi = obj.Psi_Fourier(Psi);
+            end
+            Psi = permute(Psi,[1 2 4 3]);
+            Psix = zeros(obj.N,1,nx);
+            pi2a = pi / 2 / Args.a;
+            for iN = 1:obj.N
+                if mod(iN,2)
+                    Psix(iN,1,:) = sqrt(1/Args.a) * cos(iN * pi2a * x);
                 else
-                    [mval,perm] = max(abs(tPsi0_prev'*tPsi0),[],1);
-                    % Check if overlap is too small to adiabatically
-                    % continue
-                    if ~isempty(find(abs(1-mval)>1E-1, 1))
-                        warning('Overlap is too small');
-                    end
-                    % Check if missing values
-                    if length(perm) ~= length(unique(perm))
-                        error('Missing permutation index');
-                    end
-                    % Reorder to permute properly
-                    [~,perm] = sort(perm);
-	                tPsi = tPsi(:,perm);
-	                teps = teps(perm);
-	                tPsi0 = tPsi0(:,perm);
-	                dk = round((teps-teps_prev) / obj.w);
-                    for iN = 1:obj.N
-		                tdk = dk(iN);
-                        tPsi(:,iN) = circshift(tPsi(:,iN),obj.N * tdk,2);
-		                teps(iN) = teps(iN) - tdk * obj.w;
-                    end
-                end
-                for iN = 1:obj.N
-                    Res(iV,iN).Psi=tPsi(:,iN);
-                    Res(iV,iN).eps=teps(iN);
-                end
-                teps_prev=teps;
-                tPsi0_prev=tPsi0;
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iV,length(V_range));
+                    Psix(iN,1,:) = sqrt(1/Args.a) * sin(iN * pi2a * x);
                 end
             end
+            Psix = Psi .* Psix;
+            Psix = sum(Psix,1);
+            Psix = permute(Psix,[4 2 3 1]);
         end
     end
 end

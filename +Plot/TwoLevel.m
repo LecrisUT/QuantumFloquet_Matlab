@@ -81,6 +81,7 @@ classdef TwoLevel < Plot.baseFloquet
                 V_range
                 Args.Ebar
                 Args.eps
+                Args.rhoz
                 Args.P
                 Args.P_Tresh    =  1E-2
                 Args.ymin       = -3
@@ -181,6 +182,68 @@ classdef TwoLevel < Plot.baseFloquet
             ylim(ax,[Args.ymin Args.ymax]);
             xlim(ax,V_range([1 end]));
             title(ax,'Two-level system without RWA');
+            %% Finish plot
+            subArgs = cell(1,0);
+            if isfield(Args,'File')
+                subArgs = [subArgs(:)',{'File',Args.File}];
+            end
+            obj.postPlot(fg,ax,subArgs{:});
+        end
+        function [fg,ax] = SteadyState(obj,V_range,Args)
+            arguments
+                obj
+                V_range
+                Args.rhoz
+                Args.overlapM
+                Args.File
+            end
+            % STEADYSTATE Plot the steady state distribution and overlap
+            % measure
+
+            %% Initialize basic figures
+            [fg,ax]=obj.prePlot;
+            %% Plot Data
+            if isfield(Args,'rhoz')
+                %% Plot the steady state
+                if isfield(Args,'overlapM')
+                    % Plot it with yyplot
+                    yyaxis(ax,'left');
+                end
+                plot(ax,V_range,Args.rhoz,'-',...
+                    LineWidth=obj.lineWidth,DisplayName='$\rho_z$');
+            end
+            if isfield(Args,'overlapM')
+                %% Plot the steady state
+                if isfield(Args,'rhoz')
+                    % Plot it with yyplot
+                    yyaxis(ax,'right');
+                end
+                plot(ax,V_range,Args.overlapM,'--',...
+                    LineWidth=obj.lineWidth,DisplayName='Overlap Measure');
+            end
+            %% Annotate
+%             legend(ax,...
+%                 Location='south west',...
+%                 Interpreter='latex');
+            xlabel(ax,'Driving strength $V$',...
+                Interpreter='latex');
+            if isfield(Args,'rhoz')
+                if isfield(Args,'overlapM')
+                    yyaxis(ax,'left');
+                end
+                ylabel(ax,'SS density matrix $\rho_z$',...
+                    Interpreter='latex');
+                ylim(ax,[-1 1]);
+            end
+            if isfield(Args,'overlapM')
+                if isfield(Args,'rhoz')
+                    yyaxis(ax,'right');
+                end
+                ylabel(ax,'Overlap measure $\mathcal{S}$',...
+                    Interpreter='latex');
+                ylim(ax,[0 1]);
+            end
+            xlim(ax,V_range([1 end]));
             %% Finish plot
             subArgs = cell(1,0);
             if isfield(Args,'File')
