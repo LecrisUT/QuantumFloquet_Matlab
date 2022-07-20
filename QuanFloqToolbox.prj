@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="2360985891" file="/home/lecris/matlab/Thesis/QuanFloq/QuanFloq.prj" location="/home/lecris/matlab/Thesis/QuanFloq" name="QuanFloq" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="2360985891" file="/home/lecris/MATLAB/Projects/QuanFloq/QuanFloqToolbox.prj" location="/home/lecris/MATLAB/Projects/QuanFloq" name="QuanFloqToolbox" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>Quantum Floquet</param.appname>
     <param.authnamewatermark>Cristian Le</param.authnamewatermark>
     <param.email>cristian.le@phys.s.u-tokyo.ac.jp</param.email>
@@ -89,7 +89,7 @@
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="Quantum Floquet.mltbx" optional="false">/home/lecris/matlab/Thesis/QuanFloq/Quantum Floquet.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="Quantum Floquet.mltbx" optional="false">/home/lecris/MATLAB/Projects/QuanFloq/Quantum Floquet.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
