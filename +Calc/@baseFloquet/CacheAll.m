@@ -4,7 +4,6 @@ function CacheAll(obj)
     % See also Calc.baseFloquet.dirty_cache
     
     obj.dirty_cache = false;
-    obj.cache_ht = obj.get_ht;
     obj.cache_h = obj.get_h;
     obj.cache_hf = obj.h + obj.pt;
     obj.cache_hf2 = obj.hf * obj.hf;

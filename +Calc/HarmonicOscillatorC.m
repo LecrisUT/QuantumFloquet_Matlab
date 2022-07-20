@@ -5,15 +5,18 @@ classdef HarmonicOscillatorC < Calc.HarmonicOscillatorB
     %
     % See also HarmonicOscillatorA, HarmonicOscillatorB, Calc.HarmonicOscillatorC.Psix
 
-    methods (Access=protected)
-        function ht = get_ht(obj)
+    properties (Dependent,SetAccess=private)
+        ht
+    end
+    methods
+        function val = get.ht(obj)
             % h0 = w_0 * (a^\dagger a + 0.5)
             % h(t) = h0 - L(t)
             L=obj.L;
-            ht=zeros(obj.N,obj.N,5);
-            ht(:,:,3) = obj.w0 * diag((0:obj.N-1) + 0.5 - L(3));
-            ht(:,:,1) = -L(1) * eye(obj.N);
-            ht(:,:,5) = -L(5) * eye(obj.N);
+            val=zeros(obj.N,obj.N,5);
+            val(:,:,3) = obj.w0 * diag((0:obj.N-1) + 0.5 - L(3));
+            val(:,:,1) = -L(1) * eye(obj.N);
+            val(:,:,5) = -L(5) * eye(obj.N);
         end
     end
     methods

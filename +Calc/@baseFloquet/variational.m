@@ -1,8 +1,12 @@
 function Res = variational(obj,method,Psi0,Args2)
     arguments
         obj     Calc.baseFloquet
-        method
-        Psi0    (:,:)   double  = []
+        method  {mustBeMember(method,{'AE','varQE'})}
+    end
+    arguments (Repeating)
+        Psi0
+    end
+    arguments
         Args2.opts
         Args2.ms
         Args2.Psi0
@@ -30,7 +34,7 @@ function Res = variational(obj,method,Psi0,Args2)
     % Inputs:
     %   method - minimization method (either 'AE' for average energy
     %   minimization, or 'varQE' for quasi-energy variance)
-    %   Psi0 - Starting wave function guesses
+    %   Psi0 - (Repeating) Starting wave function guesses
     %   Name-Value pairs
     %
     % Outputs:
@@ -49,13 +53,18 @@ function Res = variational(obj,method,Psi0,Args2)
     % See also Calc.baseFloquet.xi, baseFloquet.variational_AE,
     % baseFloquet.variational_varQE
 
+    if isempty(Psi0)
+        tPsi0 = zeros(obj.N, 1);
+        tPsi0(1) = 1;
+        Psi0 = {tPsi0};
+    end
     switch method
         case 'varQE'
             Args2 = namedargs2cell(Args2);
-            Res=obj.variational_varQE(Psi0,Args2{:});
+            Res=obj.variational_varQE(Psi0{:},Args2{:});
         case 'AE'
             Args2 = namedargs2cell(Args2);
-            Res=obj.variational_AE(Psi0,Args2{:});
+            Res=obj.variational_AE(Psi0{:},Args2{:});
         otherwise
             error('Not implemented');
     end

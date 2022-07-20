@@ -20,15 +20,18 @@ classdef BoxParticle < Calc.baseFloquet
         % See also BoxParticle
         V   (1,1)   double  {mustBeReal}
     end
-    methods (Hidden,Access=protected)
-        function ht = get_ht(obj)
-            ht = zeros(obj.N,obj.N,3);
-            ht(:,:,2) = diag((1:obj.N).^2);
+    properties (Dependent,SetAccess=private)
+        ht
+    end
+    methods
+        function val = get.ht(obj)
+            val = zeros(obj.N,obj.N,3);
+            val(:,:,2) = diag((1:obj.N).^2);
             th1 = ones(obj.N-1,1);
             th1(2:2:end) = -1;
             th1 = obj.V/4 * th1;
-            ht(:,:,3) = diag(th1,1)+diag(th1,-1);
-            ht(:,:,1) = ht(:,:,3)';
+            val(:,:,3) = diag(th1,1)+diag(th1,-1);
+            val(:,:,1) = val(:,:,3)';
         end
     end
     methods

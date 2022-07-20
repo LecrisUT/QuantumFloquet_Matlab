@@ -6,6 +6,7 @@ function Ebar = Ebar(obj,Psi,Args)
         Args.normalize  (1,1)   logical = false
     end
     % Ebar Calculate the average energies
+    % Switch between effective or exact using name-value flag
     % 
     % Syntax:
     %   Ebar = Ebar(Psi)

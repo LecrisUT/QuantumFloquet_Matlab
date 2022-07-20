@@ -11,17 +11,17 @@ classdef TwoLevel < Calc.baseFloquet
     % The perturbation with rand_v=true is a random time-periodic Hermitian
     % operator
     %
-    % See also Calc.baseFloquet
+    % See also baseFloquet
 
     properties
         % w0 - Undriven transition frequency $\omega_0$
-        w0      (1,1)   double  {mustBeReal,mustBePositive}
+        w0      (1,1)   double  {mustBeReal,mustBeNonnegative}
         % v - Perturbation strength
         % See also Calc.TwoLevel.rand_v
         v       (1,1)   double  {mustBeReal}
         % V - Driving strength
         % See also Calc.TwoLevel.RWA
-        V       (1,1)   double  {mustBeReal,mustBePositive}
+        V       (1,1)   double  {mustBeReal,mustBeNonnegative}
         % rand_v - Flag to use random perturbation
         % See also Calc.TwoLevel.v
         rand_v  (1,1)   logical
@@ -30,29 +30,32 @@ classdef TwoLevel < Calc.baseFloquet
         % See also Calc.TwoLevel.rand_v
         RWA     (1,1)   logical
     end
-    methods (Access=protected)
-        function ht = get_ht(obj)
+    properties (Dependent,SetAccess=private)
+        ht
+    end
+    methods
+        function val = get.ht(obj)
             if obj.rand_v
-                ht = zeros(2,2,obj.hk_max2);
-                ht(:,:,obj.hk_max+1) = [obj.w0/2 0;0 -obj.w0/2];
+                val = zeros(2,2,obj.hk_max2);
+                val(:,:,obj.hk_max+1) = [obj.w0/2 0;0 -obj.w0/2];
                 if obj.RWA
-                    ht(:,:,obj.hk_max+1+1) = [0 obj.V/2;0 0];
+                    val(:,:,obj.hk_max+1+1) = [0 obj.V/2;0 0];
                 else
-                    ht(:,:,obj.hk_max+1+1) = [0 obj.V/2;obj.V/2 0];
-                    ht(:,:,obj.hk_max+1-1) = ht(:,:,obj.hk_max+1+1)';
+                    val(:,:,obj.hk_max+1+1) = [0 obj.V/2;obj.V/2 0];
+                    val(:,:,obj.hk_max+1-1) = val(:,:,obj.hk_max+1+1)';
                 end
                 vt = obj.v/2 * rand(2,2,obj.hk_max2);
                 vt = vt + flip(pagectranspose(vt),3);
-                ht = ht + vt;
+                val = val + vt;
             else
-                ht = zeros(2,2,3);
-                ht(:,:,2) = [obj.w0/2 obj.v;obj.v -obj.w0/2];
+                val = zeros(2,2,3);
+                val(:,:,2) = [obj.w0/2 obj.v;obj.v -obj.w0/2];
                 if obj.RWA
-                    ht(:,:,3) = [0 obj.V/2; 0 0];
-                    ht(:,:,1) = ht(:,:,3)';
+                    val(:,:,3) = [0 obj.V/2; 0 0];
+                    val(:,:,1) = val(:,:,3)';
                 else
-                    ht(:,:,3) = [0 obj.V/2; obj.V/2 0];
-                    ht(:,:,1) = ht(:,:,3)';
+                    val(:,:,3) = [0 obj.V/2; obj.V/2 0];
+                    val(:,:,1) = val(:,:,3)';
                 end
             end
         end
@@ -138,8 +141,20 @@ classdef TwoLevel < Calc.baseFloquet
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);
             S = jsondecode(j);
-            S.two_level = struct('w0',obj.w0,'v',obj.v,'xi',obj.xi,'V',obj.V);
+            S.two_level = struct(RWA=obj.RWA,rand_v=obj.rand_v,w0=obj.w0,V=obj.V,v=obj.v);
             json = jsonencode(S,varargin{:});
+        end
+    end
+    methods (Access=protected)
+        function groups = getPropertyGroups(obj)
+            import matlab.mixin.util.PropertyGroup
+            groups = getPropertyGroups@Calc.baseFloquet(obj);
+            if isscalar(obj)
+
+                TwoLevel = struct(RWA=obj.RWA,rand_v=obj.rand_v,w0=obj.w0,V=obj.V,v=obj.v);
+                groups = [PropertyGroup(TwoLevel,'Two-level system properties:'),...
+                    groups];
+            end
         end
     end
 end

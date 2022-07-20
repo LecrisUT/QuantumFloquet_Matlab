@@ -1,230 +1,188 @@
-classdef HubardDimerOrbital < Calc.baseFloquet
+classdef HubardDimerOrbital < Calc.baseFloquetHF
+    % HubardDimerOrbital Driven Hubard dimer single Slater approximation
+    % See Calc.HubardDimerExact for the Hamiltonian.
+    % The Slater determinant is limited to the form
+    % $$\Phi(r_1,r_2,t)=\frac{1}{\sqrt{2}}(\phi_{\uparrow}(r_1,t)\phi_{\downarrow}(r_2,t))-\phi_{\downarrow}(r_1,t)\phi_{\uparrow}(r_2,t))$$
+    % $$\phi_\sigma(r,t)=\phi_1(t)\varphi_1(r)+\phi_2(t)\varphi_2(r)$$
+    % 
+    %
+    % See also HubardDimerExact
+
     properties
-        t
-        v0
-        v1
-        U       = 0
-        psi     = []
+        % t - Hopping parameter
+        t       (1,1)   double  {mustBeReal}
+        % v0 - Static interaction strength
+        v0      (1,1)   double  {mustBeReal}
+        % v1 - Driving strength
+        v1      (1,1)   double  {mustBeReal}
+        % U - Cuolomb interaction
+        U       (1,1)   double  {mustBeReal}
     end
-    properties (Dependent)
-        hU
-        h0
+    properties (Dependent,SetAccess=private)
+        ht
+        hUt
     end
-    methods (Access=protected)
-        function h = get_h(obj)
-            h = obj.h0 + obj.hU;
+    methods
+        function val = get.ht(obj)
+            val = zeros(2,2,3);
+            val(:,:,2) = [obj.v0/2 -obj.t;-obj.t -obj.v0/2];
+            val(:,:,3) = [obj.v1/4 0;0 -obj.v1/4];
+            val(:,:,1) = val(:,:,3)';
         end
-        function ht = get_ht(obj)
-            error('Not implemented');
+        function val = get.hUt(obj)
+            Psi = obj.Psi_Fourier(obj.Psi);
+            val = zeros(2,2,obj.hUk_max2);
+            for k = obj.hUk_range
+                if k > 0
+                    tU = conj(Psi(:,1,1:end-k)) .* Psi(:,1,1+k:end);
+                else
+                    tU = conj(Psi(:,1,1-k:end)) .* Psi(:,1,1:end+k);
+                end
+                tU = obj.U * diag(sum(tU,3));
+                val(:,:,obj.hUk_max+1+k) = tU;
+            end
         end
     end
     methods
-        function obj=HubardDimerOrbital(Args,Args2)
+        function obj = HubardDimerOrbital(Args,Args2)
             arguments
-                Args.t      = 1
-                Args.v0     = 2
-                Args.v1     = 5
-                Args2.w      = 1.5
-                Args2.k_max  = 100
-                Args2.hk_max = 30
-                Args2.xi     = 1E-3
+                Args.U          = 0
+                Args.t          = 1
+                Args.v0         = 2
+                Args.v1         = 5
+                Args2.w         = 1.5
+                Args2.k_max     = 100
+                Args2.hUk_max   = 30
+                Args2.xi        = 1E-3
             end
-            Args2.cacheMat = false;
-            Args2=namedargs2cell(Args2);
-            obj@Calc.baseFloquet(2,Args2{:});
+            % HubardDimerOrbital Constructor
+            %
+            % Syntax:
+            %   obj = HubardDimerOrbital(Name,Value)
+            % 
+            % Description:
+            %   obj = HubardDimerOrbital(Name,Value) Specify the parameters of the
+            %   two-level system via name-value pairs
+            %
+            % Inputs:
+            %   Name-Value pairs
+            %
+            % Outputs:
+            %   obj - Floquet object
+            %
+            % Name-value arguments:
+            %   U - [0] Cuolomb interaction
+            %   t - [1] Hopping parameter
+            %   v0 - [2] Static interaction
+            %   v1 - [5] Driving strength
+            %   w - [1.5] Driving frequency
+            %   k_max - [100] Fourier cut-off of Fourier coefficients
+            %   xi - [1E-3] Acceptable error
+            % 
+            % See also HubardDimerOrbital, baseFloquetHF
+
+            Args2.hk_max = 1;
+            Args2 = namedargs2cell(Args2);
+            obj@Calc.baseFloquetHF(2,Args2{:},Ne=2,mode='closed-shell');
             obj.t = Args.t;
             obj.v0 = Args.v0;
             obj.v1 = Args.v1;
         end
+    end
+    methods
+        function set.t(obj,val)
+            obj.t = val;
+            obj.dirty_cache = true;
+            obj.dirty_cacheU = true;
+        end
+        function set.v0(obj,val)
+            obj.v0 = val;
+            obj.dirty_cache = true;
+            obj.dirty_cacheU = true;
+        end
+        function set.v1(obj,val)
+            obj.v1 = val;
+            obj.dirty_cache = true;
+            obj.dirty_cacheU = true;
+        end
+        function set.U(obj,val)
+            obj.U = val;
+            obj.dirty_cacheU = true;
+        end
+    end
+    methods
+%         function newobj = Calc.HubardDimerExact(obj)
+% %             newobj = Calc.HubardDimerExact('v0');
+%         end
+        function Psi_Slat = OrbitalToSlater(obj,Psi_Orb,Args)
+            arguments
+                obj         Calc.HubardDimerOrbital
+                Psi_Orb     double
+                Args.objSlater          (1,1)   Calc.HubardDimerExact
+                Args.normalize          (1,1)   logical = true
+                Args.normalizeSlater    (1,1)   logical = false
+            end
+            % OrbitalToSlater Calculate the corresponding Slater determinant
+            % Slater determinant basis corresponds to that in Calc.HubarDimerExact
+            %
+            % See usage of Calc.baseFloquetHF.OrbitalToSlater
+            %
+            % See also baseFloquetHF.OrbitalToSlater, HubarDimerExact
+
+            if Args.normalize
+                Psi_Orb = obj.Psi_Floquet(Psi_Orb);
+                Psi_Orb = Psi_Orb ./ vecnorm(Psi_Orb);
+            end
+            Psi_Orb = obj.Psi_Fourier(Psi_Orb);
+            M = size(Psi_Orb,2);
+            % Normally should check if orbital dimensions are acceptable, but the
+            % single orbital is a special case
+            if isfield(Args,'objSlater')
+                Psi_Slat = zeros(Args.objSlater.N,M,Args.objSlater.k_max2);
+                Slat_k_max = Args.objSlater.k_max;
+            else
+                Psi_Slat = zeros(3,M,obj.k_max2);
+                Slat_k_max = obj.k_max;
+            end
+            for k = -obj.k_max:obj.k_max
+                if k>0
+                    % psi(k+l)*psi(l) with l in [-k_max:k_max]
+                    tPsi = [Psi_Orb(1,:,1+k:obj.k_max2) .* Psi_Orb(1,:,obj.k_max2:-1:1+k);
+                        Psi_Orb(1,:,1+k:obj.k_max2) .* Psi_Orb(2,:,obj.k_max2:-1:1+k);
+                        Psi_Orb(2,:,1+k:obj.k_max2) .* Psi_Orb(2,:,obj.k_max2:-1:1+k)];
+                else
+                    tPsi = [Psi_Orb(1,:,1:obj.k_max2+k) .* Psi_Orb(1,:,obj.k_max2+k:-1:1);
+                        Psi_Orb(1,:,1:obj.k_max2+k) .* Psi_Orb(2,:,obj.k_max2+k:-1:1);
+                        Psi_Orb(2,:,1:obj.k_max2+k) .* Psi_Orb(2,:,obj.k_max2+k:-1:1)];
+                end
+                tPsi = sum(tPsi,3);
+                tPsi(2,:) = tPsi(2,:) * sqrt(2);
+                Psi_Slat(:,:,Slat_k_max+1+k) = tPsi;
+            end
+            % Transform to Floquet representation
+            Psi_Slat = reshape(permute(Psi_Slat,[1 3 2]),[],M);
+            if Args.normalizeSlater
+                Psi_Slat = Psi_Slat ./ vecnorm(Psi_Slat);
+            end
+        end
+    end
+    methods
         function json = jsonencode(obj,varargin)
             j = jsonencode@Calc.baseFloquet(obj);
             S = jsondecode(j);
-            S.hubbard_dimer = struct('t',obj.t,'v0',obj.v0,'v1',obj.v1,...
-                'xi',obj.xi);
+            S.hubbard_dimer = struct(t=obj.t,v0=obj.v0,v1=obj.v1,U=obj.U);
             json = jsonencode(S,varargin{:});
         end
-        function hU = get.hU(obj)
-            % Update the Coulomb interaction
-            tpsi = reshape(obj.psi,obj.N,[]);
-            tU = zeros(2,obj.hk_max2);
-            %% Calculate the Fourier coefficients
-            for k = 0:obj.hk_max
-                ttU = tpsi(:,1:obj.k_max2-k) .* tpsi(:,1+k:end);
-                ttU = obj.U * sum(ttU,2);
-                tU(:,obj.hk_max + 1 + k) = ttU;
-                if k > 0
-                    tU(:,obj.hk_max + 1 - k) = ttU;
-                end
+    end
+    methods (Access=protected)
+        function groups = getPropertyGroups(obj)
+            import matlab.mixin.util.PropertyGroup
+            groups = getPropertyGroups@Calc.baseFloquetHF(obj);
+            if isscalar(obj)
+                Dimer = struct(t=obj.t,v0=obj.v0,v1=obj.v1,U=obj.U);
+                groups = [PropertyGroup(Dimer,'Hubard dimer system properties:'),...
+                    groups];
             end
-            %% Calculate the Floquet representation
-            tU = repmat(tU,obj.k_max2,1)';
-            tU = tU(obj.sInd.val_flag);
-            hU = sparse(obj.sInd.row,obj.sInd.col,tU);
-        end
-        function h0 = get.h0(obj)
-            h0 = [obj.v1/4  -obj.t   obj.v0/2   0   obj.v1/4;
-                -obj.v1/4   0  -obj.v0/2  -obj.t  -obj.v1/4];
-            h0 = repmat(h0,obj.k_max2,1);
-            h0 = spdiags(h0,-2:2, obj.N * obj.k_max2, obj.N * obj.k_max2);
-        end
-        function newobj = Calc.HubardDimerExact(obj)
-%             newobj = Calc.HubardDimerExact('v0');
-        end
-        function Res=FloquetHF(obj,U_range,Args)
-            error('Not implemented');
-        end
-        function Res=NonSCF(obj,U_range,Args)
-            arguments
-                obj
-                U_range
-                Args.saveFile
-                Args.loadFile
-                Args.res_HF0
-                Args.tol    = 1E-12
-                Args.th_range
-                Args.Psi0   = [1;0]
-                Args.Print  = true
-            end
-            %% Get the static HF solutions if needed
-            if ~isfield(Args,'res_HF0')
-                if Args.Print
-                    fprintf('Calculating the static HF solutions\n');tic;
-                end
-                Hub0 = Calc.HubardDimerOrbital2('t',obj.t,'v0',obj.v0);
-                subArgs = {'Psi0', Args.Psi0};
-                if isfield(Args,'th_range')
-                    subArgs = [subArgs(:)',{'th_range'},{Args.th_range}];
-                end
-                Args.res_HF0 = Hub0.eigs(U_range,'tol',1E-12,...
-                    'Print',false,subArgs{:});
-                if Args.Print
-                    fprintf('Finished calculating the static HF solutions (%fs)\n',toc);
-                end
-            end
-            %% Calculate the non-SCF solutions
-            nU = length(U_range);
-            if isfield(Args,'loadFile')
-                iU = load(Args.loadFile,'iU');
-                Res = load(Args.loadFile,'Res');
-            else
-                Res(nU,obj.N) = struct('Psi',[],'eps',[],'th',[]);
-                iU = 1;
-            end
-            for iU = iU:nU
-                %% Project the time-periodic potential on this basis
-                psi_HF = reshape([Args.res_HF0(iU,:).psi],obj.N,obj.N);
-                e_HF = [Args.res_HF0(iU,:).eps];
-                blk_diag = repmat({psi_HF},obj.k_max2,1);
-                T_mat = blkdiag(blk_diag{:});
-                vt = psi_HF' * [obj.v1/4 0;0 -obj.v1/4] * psi_HF;
-                %% Construct the Floquet Hamiltonian
-                vt_diag = spdiags(vt,-1:1);
-                vt_diagp = spdiags(vt',-1:1);
-                % Don't need to add the matrices because e_HF is diagonal
-                h_diag = repmat([vt_diagp e_HF(:,iU) vt_diag],obj.k_max2,1);
-                th = spdiags(h_diag,-3:3,obj.N*obj.k_max2,obj.N*obj.k_max2);
-                thf = th + obj.pt;
-                %% Calculate the eigenstates
-                [Psi,eps] = eigs(thf,obj.N,0);
-                % Project to original basis
-                Psi = T_mat * Psi;
-                Psi0 = obj.Psi0(Psi);
-                % Fix the phase
-                for iN=1:N
-                    if Psi0(1,iN)<0
-                        Psi(:,iN) = -Psi(:,iN);
-                        Psi0(:,iN) = -Psi0(:,iN);
-                    end
-                end
-                %% Centralize the spectrum at initial step, otherwise use adiabatic
-                if iU == 1
-                    Psi = shiftCenter(Psi,N,tol);
-                    if size(Psi,2) ~= N
-                        error('Eigenstates contained replicas');
-                    end
-                    % Project back to the previous basis before calculating the QE
-                    eps = diag(Psi' * T_mat * thf * T_mat' * Psi);
-                    % Order initially by the average energy
-                    Ebar = diag(Psi' * T_mat * th * T_mat' * Psi);
-                    [~,ind] = sort(Ebar);
-                    Psi = Psi(:,ind);
-                    eps = eps(ind);
-                    Psi0 = Psi0(:,ind);
-                end
-                %% Reorder to adiabatically continued
-                if iU > 1
-                    % Get previous values
-                    Psi_prev = reshape([Res(iU,:).Psi],[],obj.N);
-                    Psi0_prev = obj.Psi0(Psi_prev);
-                    eps_prev = [Res(iU-1,:).eps];
-                    % Overlap with previous
-                    S0 = Psi0_prev' * Psi0;
-                    % Get the closest indeces with respect to the previous WF (row)
-                    [~,ind] = max(abs(S0),[],1);
-                    Psi = Psi(:,ind);
-                    Psi0 = Psi0(:,ind);
-                    eps = eps(ind);
-                    eps = eps(:);
-                    % Shift to adiabatically continue the QE
-                    dk_eps = round((eps - eps_prev - (mod(eps-eps_prev+obj.w/2,obj.w) - obj.w/2))/obj.w);
-                    for iN =1:N
-                        Psi(:,iN) = circshift(Psi(:,iN), obj.N * dk_eps(iN), 1);
-                        eps(iN) = Psi(:,iN)' * T_mat * thf * T_mat' * Psi(:,iN);
-                    end
-                end
-                %% Calculate th
-                th = asin(Psi0(2,:));
-                %% Save the results
-                for iN = 1:obj.N
-                    Res(iU,iN).Psi = Psi(:,iN);
-                    Res(iU,iN).eps = eps(iN);
-                    Res(iU,iN).th = th(iN);
-                end
-                if isfield(Args,'saveFile')
-                    save(Args.saveFile,'Res','iU','obj','-v7.3');
-                end
-                if Args.Print
-	                fprintf('Done [%d/%d]\n',iU,nU);
-                end
-            end
-        end
-        function Psi=OrbToSlat(obj,psi)
-            % TODO: Re-implement
-%             % ORBTOSLAT Generate the corresponding Slater orbital
-%             %
-%             % Currently this is assuming HubbardDimer wavefunctions
-%         
-%             switch ndims(psi)
-%                 case 2
-%                     psi = reshape(psi,2,1,[]);
-%                 case 3
-%                 otherwise
-%                     error('Not expected')
-%             end
-%             N = size(psi,1);
-%             M = size(psi,2);
-%             k_max = (size(psi,3) - 1) / 2;
-%             k_max2 = 2 * k_max+1;
-%             Psi=zeros(3,M,k_max2);
-%             for k = -k_max:k_max
-%                 if k>0
-%                     % psi(k+l)*psi(l) with l in [-k_max:k_max]
-%                     tPsi = [psi(1,:,1+k:k_max2).*psi(1,:,k_max2:-1:1+k);
-%                         psi(1,:,1+k:k_max2).*psi(2,:,k_max2:-1:1+k);
-%                         psi(2,:,1+k:k_max2).*psi(2,:,k_max2:-1:1+k)];
-%                 else
-%                     tPsi = [psi(1,:,1:k_max2+k).*psi(1,:,k_max2+k:-1:1);
-%                         psi(1,:,1:k_max2+k).*psi(2,:,k_max2+k:-1:1);
-%                         psi(2,:,1:k_max2+k).*psi(2,:,k_max2+k:-1:1)];
-%                 end
-%                 tPsi=sum(tPsi,3);
-%                 tPsi(2,:) = tPsi(2,:)*sqrt(2);
-%                 Psi(:,:,k_max+1+k) = tPsi;
-%             end
-%         %     % If Psi(0) is normalized, this shouldn't be necessary (affects the
-%         %     % time-dependence)
-%         %     nrm = norm(Psi(:));
-%         %     Psi=Psi./nrm;
         end
     end
 end

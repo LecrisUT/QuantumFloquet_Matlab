@@ -13,16 +13,19 @@ classdef HarmonicOscillator < Calc.baseFloquet
         % V - Driving strength
         V   (1,1)   double  {mustBeReal}
     end
-    methods (Access=protected)
-        function ht = get_ht(obj)
+    properties (Dependent,SetAccess=private)
+        ht
+    end
+    methods
+        function val = get.ht(obj)
             % h0 = w_0 * (a^\dagger a + 0.5)
             % h(t) = h0 - V cos(wt) / \sqrt{2*w_0} * (a^\dagger + a)
-            ht = zeros(obj.N,obj.N,3);
-            ht(:,:,2) = obj.w0 * diag((0:obj.N-1) + 0.5);
+            val = zeros(obj.N,obj.N,3);
+            val(:,:,2) = obj.w0 * diag((0:obj.N-1) + 0.5);
             th1 = sqrt(1:(obj.N-1));
             th1 = -obj.V / 2 / sqrt(2 * obj.w0) * th1;
-            ht(:,:,3) = diag(th1,1) + diag(th1,-1);
-            ht(:,:,1) = ht(:,:,3)';
+            val(:,:,3) = diag(th1,1) + diag(th1,-1);
+            val(:,:,1) = val(:,:,3)';
         end
     end
     methods

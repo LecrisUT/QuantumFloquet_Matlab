@@ -5,8 +5,11 @@ classdef HarmonicOscillatorB < Calc.HarmonicOscillator
     %
     % See also HarmonicOscillatorA, HarmonicOscillatorC
 
-    methods (Access=protected)
-        function ht = get_ht(obj)
+    properties (Dependent,SetAccess=private)
+        ht
+    end
+    methods
+        function val = get.ht(obj)
             % h0 = w_0 * (a^\dagger a + 0.5)
             % h0(t) = h0 + 0.5*w_0^2*xc^2 - V*xc*cos(w*t)
             % h1(t) = \sqrt{w_0/2}*xc + 1i*\sqrt{w_0/2}*\dot{xc}-
@@ -16,13 +19,13 @@ classdef HarmonicOscillatorB < Calc.HarmonicOscillator
             B = obj.V * obj.w / sqrt(2 * obj.w0) / (obj.w^2 - obj.w0^2)^2;
             C = -obj.w/2 - obj.w0/2;
             Cp = -obj.w/2 + obj.w0/2;
-            ht = zeros(obj.N,obj.N,5);
-            ht(:,:,3) = obj.w0 * diag((0:obj.N-1) + 0.5 + A/2);
+            val = zeros(obj.N,obj.N,5);
+            val(:,:,3) = obj.w0 * diag((0:obj.N-1) + 0.5 + A/2);
             th1 = sqrt(1:(obj.N-1));
-            ht(:,:,5) = A/2 * eye(obj.N);
-            ht(:,:,4) = B*C*diag(th1,1) + B*Cp*diag(th1,-1);
-            ht(:,:,1) = ht(:,:,5)';
-            ht(:,:,2) = ht(:,:,4)';
+            val(:,:,5) = A/2 * eye(obj.N);
+            val(:,:,4) = B*C*diag(th1,1) + B*Cp*diag(th1,-1);
+            val(:,:,1) = val(:,:,5)';
+            val(:,:,2) = val(:,:,4)';
         end
     end
     methods

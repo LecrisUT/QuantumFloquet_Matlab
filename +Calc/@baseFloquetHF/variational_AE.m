@@ -1,11 +1,12 @@
-function Res=variational_AE(obj,Psi0,Args,Args2)
+function Res = variational_AE(obj,Psi0,Args,Args2)
     arguments
-        obj     Calc.baseFloquet
+        obj     Calc.baseFloquetHF
     end
     arguments (Repeating)
         Psi0    (:,:)   double
     end
     arguments
+        Args.SlaterCons     (1,1)   logical = true
         Args.filter_nconv   (1,1)   logical = true
         Args2.opts
         Args2.ms
@@ -14,51 +15,17 @@ function Res=variational_AE(obj,Psi0,Args,Args2)
         Args2.TrackPsi      (1,1)   logical = false
     end
     % variational_AE Perform average energy minimization
-    % 
-    % Syntax:
-    %   Res = variational_AE
-    %   [___] = variational_AE(Psi0)
-    %   [___] = variational_AE(___,Name,Value)
-    % 
-    % Description:
-    %   Res = variational_AE Perform the minimization with default generated
-    %   starting wave functions
-    %   [___] = variational_AE(Psi0) Specify the starting wave functions Psi0
-    %   [___] = variational_AE(___,Name,Value) specifies options using
-    %   name-value arguments in addition to any of the input arguments in
-    %   previous syntaxes
-    % 
-    % Inputs:
-    %   Psi0 - (Repeating) Starting wave function guesses, defaults to [1;0...]
-    %   Name-Value pairs
+    % See baseFloquet.variational_AE
     %
-    % Outputs:
-    %   Res - Structured output vector array containing all (convergent)
-    %   solutions with fields:
-    %     - Psi - Final wave function. Empty if not convergent.
-    %     - eps - Final quasi-energy. nan if not convergent.
-    %     - conv - Whether a convergent solution was found. Relevant with
-    %     filter_nconv=false where Res index corresponds to Psi0 index.
-    %     - Fval - Final average energy. nan if not convergent
-    %     - optim - Final optimality. nan if not convergent
-    %     - NSteps - Number of intermediate steps. nan if TrackPsi is false
-    %     - steps - Intermediate steps. Empty if TrackPsi is false, otherwise
-    %     contains fields: Psi, eps
-    %
-    % Name-value arguments:
-    %   opts - Override gneerated optimoptions of 'fmincon'. See implementation
-    %   for defaults
-    %   ms - Override gneerated multistart options. See impelemntation for
-    %   defaults
-    %   TypX - Override generated TypX for opts
-    %   tol - Convergence tolerance
-    %   filter_nconv - [true] Whether to filter non-convergent solutions
-    %   TrackPsi - [false] Whether to save the trial wave functions
+    % Additional name-value arguments:
+    %   SlaterCons - [true] Whether to include Slater determinant normalization
+    %   constrain
     %   
-    % See also baseFloquet.variational_base, baseFloquet.Ebar
+    % See also baseFloquet.variational_AE
 
     %% Share variables
     Args2.filter_nconv = Args.filter_nconv;
+    NOrb = obj.NOrbitals;
     %% Alter X0 variable
     % Variation should not vary the ends of the Fourier space because the
     % operators are ill-represented there
@@ -70,7 +37,7 @@ function Res=variational_AE(obj,Psi0,Args,Args2)
     end
     % flag the endpoints
     Nk_max2 = obj.N * obj.k_max2;
-    flag_end = false(Nk_max2,1);
+    flag_end = false(Nk_max2,NOrb);
     flag_end(1:obj.N*obj.hk_max,:) = true;
     flag_end(end+1-(1:obj.N*obj.hk_max),:) = true;
     %% Specify default options
@@ -89,10 +56,9 @@ function Res=variational_AE(obj,Psi0,Args,Args2)
     end
     %% Run minimization
     Args2 = namedargs2cell(Args2);
-    Res = obj.variational_base(@Ebar,@cons,Psi0{:},Args2{:});
+    Res = obj.variational_base(Psi0,@Ebar,@cons,Args2{:});
     %% Post-process results
     for iN = 1:length(Res)
-        % Extract quasi-energy value
         if ~isempty(Res(iN).Psi)
             Res(iN).eps = Res(iN).Psi(end,:);
             Res(iN).Psi = Res(iN).Psi(1:end-1,:);
@@ -119,21 +85,33 @@ function Res=variational_AE(obj,Psi0,Args,Args2)
     end
     %%
     function Ebar = Ebar(x)
-        tPsi = zeros(Nk_max2,1);
+        x = reshape(x,[],NOrb);
+        tPsi = zeros(Nk_max2,NOrb);
         % Force endpoints to be 0
-        tPsi(~flag_end) = x(1:end-1);
-        Ebar = obj.Ebar(tPsi,effective=true);
+        tPsi(~flag_end,:) = x(1:end-1,:);
+        obj.Psi = tPsi;
+        Ebar = obj.Ebar(tPsi,orbital=false,normalize=true);
     end
     %%
     function [c,ceq] = cons(x)
-        tPsi = zeros(Nk_max2,1);
+        x = reshape(x,[],NOrb);
+        tPsi = zeros(Nk_max2,NOrb);
         % Force endpoints to be 0
-        tPsi(~flag_end) = x(1:end-1);
+        tPsi(~flag_end,:) = x(1:end-1,:);
+        obj.Psi = tPsi;
         tnorm = norm(tPsi);
-        grad = obj.hf * tPsi - x(end) * tPsi;
+        grad = obj.Ff * tPsi - x(end,:) * tPsi;
+        grad = grad(:);
         c = [grad - obj.xi;
             -grad - obj.xi];
-        ceq = tnorm-1;
+        if Args.SlaterCons
+            tPsi_Slater = obj.OrbitalToSlater(tPsi,normalize=false,normalizeSlater=false);
+            tnorm_Slater = norm(tPsi_Slater);
+            ceq = [tnorm - 1;
+                tnorm_Slater - 1];
+        else
+            ceq = tnorm - 1;
+        end
     end
 end
 function Psi0 = get_Psi0(obj,Psi0)

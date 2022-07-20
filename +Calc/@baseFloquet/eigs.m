@@ -1,11 +1,11 @@
-function varargout = eigs(obj,Args,Args2)
+function varargout = eigs(obj,Args,Args2,Args3)
     arguments
         obj             (1,1)   Calc.baseFloquet
         Args.iterator   (1,1)   Calc.baseCalcIterator
         Args.Print      (1,1)   logical = true
         Args2.eps0      (1,1)   double
         Args2.Psi_prev  (:,:)   double
-        Args2.eps_prev  (:,1)   double
+        Args3.eps_prev  (:,1)   double
     end
     % eigs Calculate the Floquet eigenstates/eigenvalues
     % 
@@ -13,13 +13,15 @@ function varargout = eigs(obj,Args,Args2)
     %   eps = eigs
     %   [Psi,eps] = eigs
     %   [Psi,eps,Ebar] = eigs
-    %   eigs(___,Name,Value)
+    %   [___] = eigs(___,Name,Value)
     % 
     % Description:
     %   eps = eigs Calculate the quasi-energy eigenvalues
     %   [Psi,eps] = eigs Output the quasi-energy eigenstates as well
     %   [Psi,eps,Ebar] = eigs Calculate the average energy eigenstates
-    %   eigs(___,Name,Value) Alter the calculation with name-value pairs
+    %   [___] = eigs(___,Name,Value) specifies options using name-value
+    %   arguments in addition to any of the input arguments in previous
+    %   syntaxes.
     % 
     % Inputs:
     %   Name-Value pairs
@@ -31,7 +33,7 @@ function varargout = eigs(obj,Args,Args2)
     %
     % Name-value arguments:
     %   iterator - Calculate adiabatically continued eigenstates
-    %   Print - Print progress for adiabatic continuation
+    %   Print - [true] Print progress for adiabatic continuation
     %   eps0 - Center the (initial) quasi-energies around eps0
     %   Psi_prev - Adiabatically match the eigenstates with Psi_prev. Can be
     %   static wave functions.
@@ -54,7 +56,7 @@ function varargout = eigs(obj,Args,Args2)
         % If first itteration:
         % Set eps0: for BZ centered around eps0, otherwise call shiftCenter
         % Set Psi_prev/eps_prev: Adiabatically continue with given states
-        Args2Cells = namedargs2cell(Args2);
+        Args2Cells = [namedargs2cell(Args2) namedargs2cell(Args3)];
         while ~Args.iterator.done
             Args.iterator.next;
             if (Args.iterator.object ~= obj)
@@ -133,47 +135,11 @@ function varargout = eigs(obj,Args,Args2)
         end
         %% Adiabatically continue
         if nargout > 1 && isfield(Args2,'Psi_prev')
-            % Get previous values
-            switch size(Args2.Psi_prev,1)
-                case obj.N
-                    % Special case if input static WF
-                    Psi0_prev = Args2.Psi_prev;
-                case obj.N * obj.k_max2
-                    Psi0_prev = obj.Psi0(Args2.Psi_prev);
-                otherwise
-                    error('Wrong size for Psi_prev (1)');
-            end
-            if size(Args2.Psi_prev,2) ~= obj.N
-                error('Wrong size for Psi_prev (2)');
-            end
-            Psi0 = obj.Psi0(Psi);
-            % Overlap with previous
-            S0 = Psi0_prev' * Psi0;
-            % Get the closest indeces with respect to the previous WF (row)
-            [mval,ind] = max(abs(S0),[],1);
-            % Check if overlap is too small to adiabatically
-            % continue
-            if ~isempty(find(abs(1-mval)>1E-1, 1))
-                warning('Overlap is too small');
-            end
-            % Check if missing values
-            if length(ind) ~= length(unique(ind))
-                error('Missing permutation index');
-            end
-            % Reorder to permute properly
-            [~,ind] = sort(ind);
-            Psi = Psi(:,ind);
-            eps = eps(ind);
+            Args3 = namedargs2cell(Args3);
+            [Psi,ind] = obj.AdiabaticContinue(Psi,Args2.Psi_prev,Args3{:},eps=eps);
+            eps = obj.eps(Psi,normalize=true);
             if nargout > 2
                 Ebar = Ebar(ind);
-            end
-            % Shift to adiabatically continue the QE
-            if isfield(Args2,'eps_prev')
-                dk_eps = round((eps - Args2.eps_prev - (mod(eps-Args2.eps_prev+obj.w/2,obj.w) - obj.w/2))/obj.w);
-                for iN = 1:obj.N
-                    Psi(:,iN)=circshift(Psi(:,iN), obj.N * dk_eps(iN), 1);
-                    eps(iN) = Psi(:,iN)' * thf * Psi(:,iN);
-                end
             end
         end
     end

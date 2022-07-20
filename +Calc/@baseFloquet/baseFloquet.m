@@ -37,10 +37,6 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
         % hk_max2 - Helper property for 2*hk_max+1
         % See also Calc.baseFloquet.hk_max
         hk_max2
-        % ht - Time-periodic Hamiltonian in Fourier representation
-        % $$\hat{H}(t)=\sum_ke^{-ik\omega t}\hat{H}^{(k)}$$
-        % See also baseFloquet.get_ht, Calc.baseFloquet.cache_ht
-        ht
         % h - Time-periodic Hamiltonian in Floquet representation
         % $$\hat{\hat{H}}$$
         % See also Calc.baseFloquet.ht, baseFloquet.get_h,
@@ -52,6 +48,11 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
         % Calc.baseFloquet.cache_hf, Calc.baseFloquet.hf2
         hf
     end
+    properties (Dependent,Abstract,SetAccess=private)
+        % ht - Time-periodic Hamiltonian in Fourier representation
+        % $$\hat{H}(t)=\sum_ke^{-ik\omega t}\hat{H}^{(k)}$$
+        ht      (:,:,:)     double
+    end
     properties (Hidden,Dependent,GetAccess=protected)
         % pt - Time derivative operator in Floquet representation
         % $$\hat{\partial}_t=-ik\omega\delta_{kl}\ket{\Phi^{(k)}}\bra{\Phi^{(l)}}$$
@@ -62,10 +63,6 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
         hf2
     end
     properties (Transient,NonCopyable,Access=private)
-        % cache_ht - Cached matrix of ht
-        % See also baseFloquet.get_ht, Calc.baseFloquet.ht,
-        % Calc.baseFloquet.dirty_cache, Calc.baseFloquet.cacheMat
-        cache_ht    (:,:)   double
         % cache_h - Cached matrix of h
         % See also baseFloquet.get_h, Calc.baseFloquet.h,
         % Calc.baseFloquet.dirty_cache, Calc.baseFloquet.cacheMat
@@ -185,14 +182,6 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
             val = val(:);
             val = spdiags(val,0,obj.N * obj.k_max2,obj.N * obj.k_max2);
         end
-        function val = get.ht(obj)
-            if obj.cacheMat
-                if obj.dirty_cache; obj.CacheAll; end
-                val = obj.cache_ht;
-            else
-                val = obj.get_ht;
-            end
-        end
         function val = get.h(obj)
             if obj.cacheMat
                 if obj.dirty_cache; obj.CacheAll; end
@@ -233,9 +222,6 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
         h = get_h(obj)
         CacheAll(obj)
     end
-    methods (Hidden,Abstract,Access=protected)
-        get_ht(obj)
-    end
     % Operation methods
     methods
         [S,om_mnk] = SpectraOverlap(obj,Psi1,Psi2,Args)
@@ -255,6 +241,8 @@ classdef (Abstract) baseFloquet < Calc.baseCalc
         Psi = shiftCenter(obj,Psi,Args)
         Res = variational(obj,method,Psi0,Args)
         Psi = matchSize(obj,obj2,Psi2)
+        Psi = FixPhase(obj,Psi)
+        [Psi,ind,eps] = AdiabaticContinue(obj,Psi_prev,Args)
     end
     methods (Hidden)
         Res = variational_varQE(obj,Psi0,Args)

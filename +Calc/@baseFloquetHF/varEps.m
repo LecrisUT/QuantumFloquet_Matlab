@@ -1,9 +1,10 @@
 function varEps = varEps(obj,Psi,Args)
     arguments
-        obj     Calc.baseFloquet
+        obj     Calc.baseFloquetHF
         Psi     double
         Args.eps        (:,1)   double  {mustBeReal}
-        Args.normalize  logical = false
+        Args.normalize  (1,1)   logical = false
+        Args.orbital    (1,1)   logical = true
     end
     % varEps Calculate the quasi-energy variance
     % 
@@ -27,15 +28,23 @@ function varEps = varEps(obj,Psi,Args)
     % Name-value arguments:
     %   normalize - [false] Whether to normalize the wave functions
     %   eps - Pre-calculated quasi-energies
+    %   orbital - [true] Whether to calculate orbital or many-body quasi-energy
+    %   variance
     %   
-    % See also Calc.baseFloquet.hf2, Calc.baseFloquet.eps
+    % See also baseFloquet.varEps
 
+    if ~Args.orbital
+        error('Not implemented')
+    end
+    %% Make sure the wave function is in Floquet representation
     Psi = obj.Psi_Floquet(Psi);
+    %% Normalize the wave function if necessary
     if Args.normalize
         Psi = Psi ./ vecnorm(Psi);
     end
     if ~isfield(Args,'eps')
-        Args.eps = obj.eps(Psi,normalize=false);
+        Args.eps = obj.eps(Psi);
     end
-    varEps = diag(Psi' * obj.hf2 * Psi) - Args.eps .* Args.eps;
+    %% Calculate the quasi-energy variance
+    varEps = diag(Psi' * obj.Ff * obj.Ff * Psi) - Args.eps .* Args.eps;
 end
