@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="2360985891" file="/home/lecris/matlab/Thesis/refactor/QuanFloq.prj" location="/home/lecris/matlab/Thesis/refactor" name="QuanFloq" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="2360985891" file="/home/lecris/matlab/Thesis/QuanFloq/QuanFloq.prj" location="/home/lecris/matlab/Thesis/QuanFloq" name="QuanFloq" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>Quantum Floquet</param.appname>
     <param.authnamewatermark>Cristian Le</param.authnamewatermark>
     <param.email>cristian.le@phys.s.u-tokyo.ac.jp</param.email>
@@ -14,14 +14,14 @@
     <param.products.version />
     <param.platforms />
     <param.guid>88f227d6-9730-45d6-9214-cddd30bb6736</param.guid>
-    <param.exclude.filters />
+    <param.exclude.filters>**/.git</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />
     <param.apps />
     <param.registered.apps />
-    <param.docs>${PROJECT_ROOT}/QuanFloq/info.xml</param.docs>
-    <param.getting.started.guide>${PROJECT_ROOT}/QuanFloq/doc/GettingStarted.mlx</param.getting.started.guide>
+    <param.docs>${PROJECT_ROOT}/info.xml</param.docs>
+    <param.getting.started.guide>${PROJECT_ROOT}/doc/GettingStarted.mlx</param.getting.started.guide>
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
@@ -49,7 +49,6 @@
       <param.products.id />
       <param.products.version />
       <param.platforms />
-      <param.exclude.filters />
       <param.exclude.pcodedmfiles />
       <param.examples />
       <param.demosxml />
@@ -74,30 +73,23 @@
       <param.additional.sw.linux.url />
     </unset>
     <fileset.rootdir>
-      <file>${PROJECT_ROOT}/QuanFloq</file>
+      <file>${PROJECT_ROOT}</file>
     </fileset.rootdir>
     <fileset.rootfiles>
-      <file>${PROJECT_ROOT}/QuanFloq/+QuanFloq</file>
-      <file>${PROJECT_ROOT}/QuanFloq/demos.xml</file>
-      <file>${PROJECT_ROOT}/QuanFloq/doc</file>
-      <file>${PROJECT_ROOT}/QuanFloq/helptoc.xml</file>
-      <file>${PROJECT_ROOT}/QuanFloq/info.xml</file>
+      <file>${PROJECT_ROOT}/+QuanFloq</file>
+      <file>${PROJECT_ROOT}/.gitattributes</file>
+      <file>${PROJECT_ROOT}/.gitignore</file>
+      <file>${PROJECT_ROOT}/README.md</file>
+      <file>${PROJECT_ROOT}/demos.xml</file>
+      <file>${PROJECT_ROOT}/doc</file>
+      <file>${PROJECT_ROOT}/helptoc.xml</file>
+      <file>${PROJECT_ROOT}/info.xml</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
-    <fileset.depfun.excluded>
-      <file>${PROJECT_ROOT}/CalcRes.mat</file>
-      <file>${PROJECT_ROOT}/Calc_BoxParticle.mat</file>
-      <file>${PROJECT_ROOT}/Calc_BoxParticle2.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevel.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevel2.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevel3.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevelNonRWA.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevelNonRWA2.mat</file>
-      <file>${PROJECT_ROOT}/Calc_TwoLevelNonRWA3.mat</file>
-    </fileset.depfun.excluded>
+    <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="Quantum Floquet.mltbx" optional="false">/home/lecris/matlab/Thesis/refactor/Quantum Floquet.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="Quantum Floquet.mltbx" optional="false">/home/lecris/matlab/Thesis/QuanFloq/Quantum Floquet.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
