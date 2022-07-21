@@ -1,9 +1,14 @@
 name: Package Matlab toolbox
-on: [push]
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 jobs:
   package-toolbox:
-    name: Package Matlab toolbox
+    name: Package and release Matlab toolbox
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
@@ -13,9 +18,7 @@ jobs:
         uses: matlab-actions/run-command@v1
         with:
           command: matlab.addons.toolbox.packageToolbox('QuanFloqToolbox.prj','QuanFloq.mltbx')
-      - name: Upload toolbox
-        uses: actions/upload-artifact@v3
+      - name: Create release
+        uses: ncipollo/release-action@v1
         with:
-          name: Toolbox
-          path: |
-            QuanFloq.mltbx
+          artifacts: "QuanFloq.mltbx"
