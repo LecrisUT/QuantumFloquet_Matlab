@@ -1,0 +1,71 @@
+baseFloquet.AdiabaticContinue:
+  type: method
+  name: QuanFloq.baseFloquet.AdiabaticContinue
+  class: QuanFloq.baseFloquet
+  purpose: Reorder the Floquet states to adiabatically continue
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+              - Psi_prev
+            outputs:
+              - Psi
+            description: |-
+              Reorder the states Psi to adiabatically continue to Psi_prev
+          - inputs:
+              - Psi
+              - Psi_prev
+            outputs:
+              - Psi
+              - ind
+            description: |-
+              Output the permutation indices used in the reordering
+  inputs:
+    Psi:
+      purpose: Wave functions to be reordered
+      kind: required
+      dims: 2
+      class: double
+    Psi_prev:
+      purpose: Reference wave functions to adiabatically continue
+      kind: required
+      dims: 2
+      class: double
+      description: |
+        Can be either static wave function or a Floquet representation
+  outputs:
+    Psi:
+      purpose: Reordered wave functions
+      kind: required
+      dims: 2
+      class: double
+    ind:
+      purpose: Indices of the reordering permutation
+      kind: optional
+      dims: 1
+      class: double
+      type:
+        - integer
+  nameValue:
+    eps:
+      purpose: Quasi-energies of the states to be reordered
+      symbol: \eps
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        Only relevant together with eps_prev. If not provided, they are calculated automatically.
+    eps_prev:
+      purpose: Quasi-energies of the reference states
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        If provided will adiabatically continue the quasi-energies as well to the relevant Brillouin zone.
+        Otherwise the original Brillouin zone is preserved

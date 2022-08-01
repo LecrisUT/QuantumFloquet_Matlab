@@ -1,0 +1,319 @@
+%% {{ name }}
+% <html>
+{% set package = getPackage() %}
+{% if package %}
+%   <p style="float:none;margin-bottom:unset"><b>Package:</b>&nbsp;<a href="{{ package|getHRef }}"><code>{{ package }}</code></a></p>
+{% endif %}
+{% if type == 'method' %}
+%   <p style="float:none;margin-bottom:unset"><b>Class:</b>&nbsp;<a href="{{ class|getHRef }}"><code>{{ class }}</code></a></p>
+{% if abstract %}
+%   <p style="float:none;margin-bottom:unset"><b>Abstract</b>&nbsp;<code>{{ abstract|string }}</code></p>
+{% endif %}
+{% endif %}
+{% if purpose %}
+%   <p style="float:none;margin-top:10px">{{ purpose }}</p>
+{% endif %}
+% </html>
+%%
+% {{ description|default('') }}
+%
+%% Syntax
+% <html>
+%   <div class="syntax_signature">
+{% set syntaxNS = namespace(num=0) %}
+{% for group in syntax.groups %}
+%     <div class="syntax_signature_module">
+    {% for syntax in group.syntax %}
+        {% set syntaxNS.num = syntaxNS.num + 1 %}
+%       <div class="code_responsive">
+%         <code class="synopsis"><a class="intrnllnk" href="{{ "#syntax-" + syntaxNS.num|string }}">{{ syntax.outputs|asOutputs }}{{ name }}{{ syntax.inputs|asInputs }}</a></code>
+%       </div>
+    {% endfor %}
+%     </div>
+{% endfor %}
+{% if syntax.nameValue %}
+{% set syntaxNS.num = syntaxNS.num + 1 %}
+%     <div class="syntax_signature_module">
+%       <div class="code_responsive">
+%         <code class="synopsis"><a class="intrnllnk" href="{{ "#syntax-" + syntaxNS.num|string }}">[___] = {{ name }}(___,Name,Value)</a></code>
+%       </div>
+%     </div>
+{% endif %}
+%   </div>
+% </html>
+%
+%% Description
+% <html>
+{% set syntaxNS.num = 0 %}
+{% for group in syntax.groups %}
+%   <div class="description_module">
+    {% for syntax in group.syntax %}
+        {% set syntaxNS.num = syntaxNS.num + 1 %}
+%     <div class="description_element">
+        {% if syntax.example %}
+%       <p class="syntax_example">
+%         <a href="#{{ syntax.example }}">example</a>
+%       </p>
+        {% endif %}
+%       <div class="code_responsive"><p>
+%         <code class="synopsis" id="{{ "syntax-" + syntaxNS.num|string }}">{{ syntax.outputs|asOutputs(withLinks=True) }}{{ name }}{{ syntax.inputs|asInputs(withLinks=True) }}</code>
+% </html>
+%
+% {{ syntax.description|default('') }}
+%
+% <html>
+%       </p></div>
+%     </div>
+    {% endfor %}
+%   </div>
+{% endfor %}
+{% if syntax.nameValue %}
+    {% set syntaxNS.num = syntaxNS.num + 1 %}
+%   <div class="description_module">
+%     <div class="description_element">
+%       <div class="code_responsive"><p>
+%         <code class="synopsis" id="{{ "syntax-" + syntaxNS.num|string }}">[___] = {{ name }}(___,<a class="intrnllnk" href="#Name-Value-arguments">Name,Value</a>)</code>
+% </html>
+%
+    {% if syntax.nameValue is string %}
+% {{ syntax.nameValue }}
+    {% else %}
+% Summary
+    {% endif %}
+%
+% <html>
+%       </p></div>
+%     </div>
+%   </div>
+{% endif %}
+% </html>
+%
+{% if examples %}
+    {% set exampleNS = namespace(num=0) %}
+%% Examples
+% <html>
+%   <div class="expandableContent" id="expandableExamples">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for example in examples %}
+        {% set exampleNS.num = exampleNS.num + 1 %}
+        {% set exName = "example" + exampleNS.num|string %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ exName }}_head" data-toggle="collapse" data-target="#{{ exName }}_body" aria-controls="{{ exName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ exName }}">{{ example.head}}</h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ exName }}_body" aria-labelledby="{{ exName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+{{ example.body }}
+%%
+% <html>
+%         </div>
+%         <!--div class="procedure"></div-->
+%       </div>
+%     </div></div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if inputs or nameValue %}
+%% Input Arguments
+    {% if inputs %}
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+        {% for key, values in inputs.items() %}
+            {% set itemName = "inp-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+%           <code>{{ key }}</code> &#8212; {{ values.purpose }}<br/>
+            {% if values.default %}
+%           <span class="add_font_color_general">[default={{ values.default }}]</span>&nbsp;
+            {% endif %}
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|default('')|replace("\n","\n% ") }}
+%
+% *Checks:* {{ values|getTypes|join(', ')|default('None') }}
+%
+% <html>
+%         </div>
+%       </div>
+%     </div></div>
+        {% endfor %}
+%   </div>
+% </html>
+    {% endif %}
+    {% if nameValue %}
+%%
+% <html>
+%   <h3 id="Name-Value-arguments" class="bottom_ruled">Name-Value arguments</h3>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+        {% for key, values in nameValue.items() %}
+            {% set itemName = "nameValue-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+%           <code>{{ key }}</code> &#8212; {{ values.purpose}}<br/>
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|default('')|replace("\n","\n% ") }}
+%
+% *Checks:* {{ values|getTypes|join(', ')|default('None') }}
+%
+% <html>
+%         </div>
+%       </div>
+%     </div></div>
+        {% endfor %}
+%   </div>
+% </html>
+    {% endif %}
+{% endif %}
+{% if outputs %}
+%% Output Arguments
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for key, values in outputs.items() %}
+        {% set itemName = "out-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+%           <code>{{ key }}</code> &#8212; {{ values.purpose}}<br/>
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|default('')|replace("\n","\n% ") }}
+%
+% <html>
+%         </div>
+%       </div>
+%     </div></div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if structs %}
+%% Custom structures
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for key, values in structs.items() %}
+        {% set itemName = "struc-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+%           <code>{{ key }}</code> &#8212; {{ values.purpose}}<br/>
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|default('')|replace("\n","\n% ") }}
+%
+% <html>
+%         </div>
+%       </div>
+%     </div></div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if moreAbout %}
+{% set aboutNS = namespace(num=0) %}
+%% More About
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for item in moreAbout %}
+        {% set aboutNS.num = aboutNS.num + 1 %}
+%     <div class="expand_collapse">
+%       <!-- Header -->
+%       <h3 class="expand_trigger" id="moreabout{{ aboutNS.num|string }}" aria-expanded="true" data-toggle="collapse" data-target="#moreabout{{ aboutNS.num|string }}_body" aria-controls="moreabout{{ aboutNS.num|string }}_body">
+%         <span class="icon-arrow-open-down"></span>
+%         <span class="icon-arrow-open-right"></span>
+%         {{ item.head }}
+%       </h3>
+%       <!-- Body -->
+%       <div id="moreabout{{ aboutNS.num|string }}_body" class="collapsible_content collapse in" aria-expanded="true">
+% </html>
+%
+% {{ item.body|replace("\n","\n% ")}}
+%
+% <html>
+%       </div>
+%     </div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if tips %}
+%% Tips
+    {% for tip in tips %}
+% * {{ tip }}
+    {% endfor %}
+%
+{% endif %}
+%% See also
+{% for item in seeAlso %}
+% <a href="{{ item|getHRef }}"><code>{{ item }}</code></a>{% if not loop.last %}, {% endif %}
+{% endfor %}
+%
+% <html>
+% <h3 id="Topics">Topics</h3>
+% </html>
+%
+{% for item in topics %}
+% <a href="{{ item|getHRef }}">{{ item }}</a>>{% if not loop.last %}, {% endif %}
+{% endfor %}

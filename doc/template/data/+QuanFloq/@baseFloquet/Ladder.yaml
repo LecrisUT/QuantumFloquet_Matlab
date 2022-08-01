@@ -1,0 +1,91 @@
+baseFloquet.Ladder:
+  type: method
+  name: QuanFloq.baseFloquet.Ladder
+  class: QuanFloq.baseFloquet
+  purpose: Calculate or estimate the ladder operator
+  description: |-
+    (Currently only estimation of single frequency Hamiltoninan is implemented)
+    Ladder operator $L^{(\dagger)}_k$ lowers (raises) the Fourier index
+    of the Floquet eigenstate
+    $$L_k\ket{\Phi^{(k))}=\ket{\Phi^{(k-1)}}$$
+    $$L^{\dagger}_k\ket{\Phi^{(k))}=\ket{\Phi^{(k+1)}}$$
+    $$[H^{(0)}-(\epsilon+k\omega)]+\sum_{l}^{hk_{max}}H^{(l)}\prod_{m=1}^{l}L_{k+m}+\sum_{l=1}^{hk_{max}}H^{(-l)}\prod_{m=1}^{l}L^{\dagger}_{k-m}=0$$
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - k
+            outputs:
+              - aLk
+            description: |-
+              Estimate the minimum order of the |k|th ladder operator
+      - syntax:
+          - inputs:
+              - k
+              - eps
+            outputs:
+              - Lk
+            description: |-
+              Calculate the ladder operators from the |k|th index to convergence
+  inputs:
+    k:
+      purpose: Fourier index from which to start calculating
+      kind: required
+      class: double
+      dims: 0
+      type:
+        - integer
+  outputs:
+    Lk:
+      purpose: All of the ladder operators from |k|th to convergence
+      kind: required
+      dims: 3
+      class: double
+      description: |-
+        [Not Implemented]
+        
+        Series of ladder operators from the |k|th to the convergent one with tolerance |tol|
+    aLk:
+      purpose: Approximate order of the |k|th ladder operator
+      kind: required
+      dims: 0
+      class: double
+      type:
+        - real
+      description: |-
+        Estimated order from the definition
+        $$L^{\dagger}_{k}=[H^{(0)}-(\epsilon+(k+1)\omega)+H^{(-1)}L^{\dagger}_{k+1}]^{-1}H^{(+1)}$$
+        Assuming $\epsilon\ll k\omega$
+        
+        [Only implemented for single frequency driving]
+  nameValue:
+    dagger:
+      purpose: Calculate the rising operator
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        Calculate rising operator $L^{\dagger}_{k}$ instead of the lowering one $L_{k}$
+    eps:
+      purpose: Quasi-energy approximation
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - real
+      description: |-
+        [Not implemented]
+        
+        If provided will calculate the ladder operators instead of estimating their order
+    tol:
+      purpose: Cut-off tolerance
+      kind: namevalue
+      dims: 0
+      class: double
+      default: 1E-10
+      type:
+        - real
+      description: |-
+        Cut-off tolerance to consider the series convergent

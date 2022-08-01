@@ -1,0 +1,37 @@
+baseFloquet.Psi0:
+  type: method
+  name: QuanFloq.baseFloquet.Psi0
+  class: QuanFloq.baseFloquet
+  purpose: Evaluate the wave function at $t=0$
+  syntax:
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Psi0
+            description: |-
+              Shrink or expand |Psi2| of |obj2| to match the dimensions |N| and |k_max| of the current object
+  inputs:
+    Psi:
+      purpose: Wave function to shrink/expand
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        In either Floquet or Fourier representation
+  outputs:
+    Psi:
+      purpose: Wave function at $t=0$
+      kind: required
+      dims: 2
+      class: double
+  nameValue:
+    normalize:
+      purpose: Normalize the wave functions
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        [Not recommended] Whether to renormalize the resulting wave function. Not recommended because it will represent a different wave function

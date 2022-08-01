@@ -11,7 +11,7 @@ classdef TwoLevel < QuanFloq.baseFloquet
     % The perturbation with rand_v=true is a random time-periodic Hermitian
     % operator
     %
-    % See also baseFloquet
+    % See also QuanFloq.baseFloquet
 
     properties
         % w0 - Undriven transition frequency $\omega_0$

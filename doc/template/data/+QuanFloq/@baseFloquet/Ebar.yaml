@@ -1,0 +1,72 @@
+baseFloquet.Ebar:
+  type: method
+  name: QuanFloq.baseFloquet.Ebar
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the average energies
+  description: |-
+    Calculates either the effective or exact average energies of specific states
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Ebar
+            description: |-
+              Calculate the exact average energies
+      - syntax:
+          - inputs:
+              - Psi
+              - effective=true
+            outputs:
+              - eEbar
+            description: |-
+              Calculate the effective average energies
+  inputs:
+    Psi:
+      purpose: Wave functions
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        Either in Floquet or Fourier representation. Multiple states can be passed in the second dimension.
+  outputs:
+    Ebar:
+      purpose: Exact average energy
+      symbol: \bar{E}
+      kind: required
+      dims: 1
+      class: double
+      description: |-
+        Each average energy corresponds to the states in the second dimension of |Psi|
+    eEbar:
+      purpose: Effective average energy
+      symbol: \bar{\mathcal{E}}
+      kind: required
+      dims: 1
+      class: double
+      description: |-
+        Triggered by |effective|. Each average energy corresponds to the states in the second dimension of |Psi|
+  nameValue:
+    effective:
+      purpose: Effective or exact average energy
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set to true, will calculate effective average energy instead of the exact one
+    normalize:
+      purpose: Normalize the wavefunctions before calculating
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set to true, will first normalize the wave functions before calculating the average energy.
+        In the case of exact average energies, the wave functions are always normalized when calculating |HBar|,
+        but not when calculating the expectation values
+  seeAlso:
+    - HBar
+    - QuanFloq.baseFloquet/prop-xi

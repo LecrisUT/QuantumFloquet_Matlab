@@ -1,0 +1,139 @@
+%% {{ name }}
+% <html>
+{% set package = getPackage() %}
+{% if package %}
+%   <p style="float:none;margin-bottom:unset"><b>Package:</b>&nbsp;<a href="{{ package|getHRef }}"><code>{{ package }}</code></a></p>
+{% endif %}
+{% if purpose %}
+%   <p style="float:none;margin-top:10px">{{ purpose }}</p>
+{% endif %}
+% </html>
+%%
+% {{ description|default('') }}
+%
+{% if packages %}
+%% Packages
+% <html>
+%   <div class="table-responsive"><table class="table table-bordered table-condensed"><tbody>
+%     <tr>
+%       <th>Package</th>
+%       <th>Description</th>
+%     </tr>
+    {% for key, values in packages.items() %}
+%     <tr>
+%       <td class="term notranslate">
+%         <a href="{{ key|getHRef }}"><code class="function">{{ key }}</code></a>
+%       </td>
+%       <td class="description">
+%         {{ key|getPurpose }}
+%       </td>
+%     </tr>
+    {% endfor %}
+%   </tbody></table></div>
+% </html>
+{% endif %}
+{% if classes %}
+%% Classes
+% <html>
+%   <div class="table-responsive"><table class="table table-bordered table-condensed"><tbody>
+%     <tr>
+%       <th>Class</th>
+%       <th>Description</th>
+%     </tr>
+    {% for key, values in classes.items() %}
+%     <tr>
+%       <td class="term notranslate">
+%         <a href="{{ key|getHRef }}"><code class="function">{{ key }}</code></a>
+%       </td>
+%       <td class="description">
+%         {{ key|getPurpose }}
+%       </td>
+%     </tr>
+    {% endfor %}
+%   </tbody></table></div>
+% </html>
+{% endif %}
+{% if functions %}
+%% Functions
+% <html>
+%   <div class="table-responsive"><table class="table table-bordered table-condensed"><tbody>
+%     <tr>
+%       <th>Function</th>
+%       <th>Description</th>
+%     </tr>
+    {% for key, values in functions.items() %}
+%     <tr>
+%       <td class="term notranslate">
+%         <a href="{{ key|getHRef }}"><code class="function">{{ key }}</code></a>
+%       </td>
+%       <td class="description">
+%         {{ key|getPurpose }}
+%       </td>
+%     </tr>
+    {% endfor %}
+%   </tbody></table></div>
+% </html>
+{% endif %}
+{% if scripts %}
+%% Scripts
+% <html>
+%   <div class="table-responsive"><table class="table table-bordered table-condensed"><tbody>
+%     <tr>
+%       <th>Script</th>
+%       <th>Description</th>
+%     </tr>
+    {% for key, values in scripts.items() %}
+%     <tr>
+%       <td class="term notranslate">
+%         <a href="{{ key|getHRef }}"><code class="function">{{ key }}</code></a>
+%       </td>
+%       <td class="description">
+%         {{ key|getPurpose }}
+%       </td>
+%     </tr>
+    {% endfor %}
+%   </tbody></table></div>
+% </html>
+{% endif %}
+{% if moreAbout %}
+{% set aboutNS = namespace(num=0) %}
+%% More About
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for item in moreAbout %}
+        {% set aboutNS.num = aboutNS.num + 1 %}
+%     <div class="expand_collapse">
+%       <!-- Header -->
+%       <h3 class="expand_trigger" id="moreabout{{ aboutNS.num|string }}" aria-expanded="true" data-toggle="collapse" data-target="#moreabout{{ aboutNS.num|string }}_body" aria-controls="moreabout{{ aboutNS.num|string }}_body">
+%         <span class="icon-arrow-open-down"></span>
+%         <span class="icon-arrow-open-right"></span>
+%         {{ item.head }}
+%       </h3>
+%       <!-- Body -->
+%       <div id="moreabout{{ aboutNS.num|string }}_body" class="collapsible_content collapse in" aria-expanded="true">
+% </html>
+%
+% {{ item.body|replace("\n","\n% ")}}
+%
+% <html>
+%       </div>
+%     </div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+%% See also
+{% for item in seeAlso %}
+% <a href="{{ item|getHRef }}"><code>{{ item }}</code></a>{% if not loop.last %}, {% endif %}
+{% endfor %}
+%
+% <html>
+% <h3 id="Topics">Topics</h3>
+% </html>
+%
+{% for item in topics %}
+% <a href="{{ item|getHRef }}">{{ item }}</a>>{% if not loop.last %}, {% endif %}
+{% endfor %}

@@ -1,0 +1,48 @@
+baseFloquet.matchSize:
+  type: method
+  name: QuanFloq.baseFloquet.matchSize
+  class: QuanFloq.baseFloquet
+  purpose: Match size of wavefunctions
+  description: |-
+    Makes sure that the wave functions of a partner Floquet object match the current Floquet object's sizes. Truncate or fill zeros.
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - obj2
+              - Psi2
+            outputs:
+              - Psi
+            description: |-
+              Shrink or expand |Psi2| of |obj2| to match the dimensions |N| and |k_max| of the current object
+  inputs:
+    obj2:
+      purpose: Partner Floquet object associated with |Psi2|
+      kind: required
+      class: QuanFloq.baseFloquet
+      dims: 0
+    Psi2:
+      purpose: Wave function to shrink/expand
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        In either Floquet or Fourier representation
+  outputs:
+    Psi:
+      purpose: Equivalent wave function
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+        In Floquet representation. Matches the size of current object
+  nameValue:
+    normalize:
+      purpose: Normalize the wave functions
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        [Not recommended] Whether to renormalize the resulting wave function. Not recommended because it will represent a different wave function

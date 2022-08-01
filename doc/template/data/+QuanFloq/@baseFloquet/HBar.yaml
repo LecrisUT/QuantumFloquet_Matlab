@@ -1,0 +1,96 @@
+baseFloquet.HBar:
+  type: method
+  name: QuanFloq.baseFloquet.HBar
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the average energy operator
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - outputs:
+              - HBar
+            description: |-
+              Calculate the full average energy operator
+          - inputs:
+              - Psi
+            outputs:
+              - HBar
+            description: |-
+              Calculate the average energy operator around the states |Psi|
+          - inputs:
+              - Psi
+              - eps
+            outputs:
+              - HBar
+            description: |-
+              Include the quasi-energy eigenvalues of |Psi|
+          - inputs: all
+            outputs:
+              - HBar
+              - Psi
+              - eps
+            description: |-
+              Output the ordered wave function and eigenstates
+  inputs:
+    Psi:
+      purpose: Quasi-energy eigenstates
+      kind: optional
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        Either in Floquet or Fourier representation. If not provided, all quasi-energies within a Brillouin zone will be
+        automatically calculated and used
+    eps:
+      purpose: Quasi-energy eigenvalues
+      kind: optional
+      class: double
+      dims: 1
+      description: |-
+        If not provided will be automatically calculated
+  outputs:
+    HBar:
+      purpose: Average energy operator
+      symbol: \bar{H}
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+        Either the average energy operator projected on the given basis, or in the original Floquet representation,
+        depending on |projectBack|.
+    Psi:
+      purpose: (Re)Ordered quasi-energy eigenstates
+      kind: optional
+      dims: 2
+      class: double
+      description: |-
+        Reordered eigenstates in the Floquet representation, such that the quasi-energy distance (within a Brillouin
+        zone) is maximum. If not requested, |HBar| is ordered according to the original ordering of |Psi|
+    eps:
+      purpose: (Re)Ordered quasi-energy eigenstates
+      kind: optional
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        See output |Psi|
+  nameValue:
+    ignoreCheck:
+      purpose: Ignore checks of the quasi-energy
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        When false, it will check that the quasi-energies are within a singe Brillouin zone and that the first and last
+        ones are larger than the acceptable error |xi|
+    projectBack:
+      purpose: Project the operator in the original Floquet space
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+  seeAlso:
+    - eigs
+    - QuanFloq.baseFloquet/prop-xi
+    - shiftBZ

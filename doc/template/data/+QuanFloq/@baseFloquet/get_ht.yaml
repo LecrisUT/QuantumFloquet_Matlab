@@ -1,0 +1,23 @@
+baseFloquet.get_ht:
+  type: method
+  name: QuanFloq.baseFloquet.get_ht
+  class: QuanFloq.baseFloquet
+  abstract: true
+  purpose: Basic getter for ht
+  description: |-
+    Defines the concrete time-periodic Hamiltonian in Fourier representation
+  syntax:
+    groups:
+      - syntax:
+          - outputs:
+              - ht
+            description: |-
+              Calculates the time-periodic Hamiltonian in Fourier representation
+  outputs:
+    ht:
+      purpose: Time-periodic Hamiltonian in Fourier representation
+      kind: required
+      class: double
+      dims: 3
+  seeAlso:
+    - QuanFloq.baseFloquet/prop-ht

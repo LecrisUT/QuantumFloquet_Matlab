@@ -1,0 +1,73 @@
+baseFloquet.shiftBZ:
+  type: method
+  name: QuanFloq.baseFloquet.shiftBZ
+  class: QuanFloq.baseFloquet
+  purpose: Shift the Brillouin zone center
+  description: |-
+    Shifts the Brillouin zone so that the ends of it are maximally seperated
+  syntax:
+    groups:
+      - syntax:
+          - inputs:
+              - eps
+            outputs:
+              - BZc
+            description: |-
+              Calculate the Brillouin zone center such that the first and last quasi-energy have the largest distance
+      - syntax:
+          - inputs:
+              - eps
+            outputs:
+              - eps
+              - dPsi
+            description: |-
+              Reorder the quasi-energies around the Brillouin zone center. Output a dummy |dPsi=[]| to separate from former.
+          - inputs:
+              - eps
+              - Psi
+            outputs:
+              - eps
+              - Psi
+            description: |-
+              Reorder the quasi-energies and eigenstates around the Brillouin zone center.
+  inputs:
+    eps:
+      purpose: Quasi-energies
+      kind: required
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        [Note: Currently must provide the full quasi-energy spectra of 3 consecutive Brillouin zones]
+        
+        Relevant quasi-energies to calculate the center of the Brillouin zone
+    Psi:
+      purpose: Floquet wave functions
+      kind: optional
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In either Floquet or Fourier representation
+  outputs:
+    eps:
+      purpose: Reordered quasi-energies
+      kind: required
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        Reordered quasi-energies filtered to a single Brillouin zone
+    dPsi:
+      purpose: Dummy output
+      kind: required
+      description: |-
+        Dummy empty output (|=[]|) used to distinguish from other syntax
+    Psi:
+      purpose: Floquet wave functions
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+         In Floquet representation. Filtered and reordered Floquet wave functions corresponding to |eps|

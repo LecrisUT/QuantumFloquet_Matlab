@@ -53,6 +53,6 @@ function Lk = Ladder(obj,k,Args)
         th = tht(:,:,obj.hk_max+1 + 1) + tht(:,:,obj.hk_max+1 - 1);
         max_E = eig(th,'vector');
         max_E = max(abs(max_E));
-        Lk = max_E / k / obj.w;
+        Lk = abs(max_E / k / obj.w);
     end
 end

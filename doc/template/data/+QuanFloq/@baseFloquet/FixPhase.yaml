@@ -1,0 +1,32 @@
+baseFloquet.FixPhase:
+  type: method
+  name: QuanFloq.baseFloquet.FixPhase
+  class: QuanFloq.baseFloquet
+  purpose: Fix the wave function phase
+  description: |-
+    Transform the wave function to have a pre-defined global phase convention. Overload to define other phase conventions
+  syntax:
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Psi
+            description: |-
+              Fix the phase of the wave functions |Psi|
+  inputs:
+    Psi:
+      purpose: Wave function to alter
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        Either in Floquet or Fourier representation
+  outputs:
+    Psi:
+      purpose: Transformed wave functions with appropriate global phase
+      kind: required
+      class: double
+      dims: 2
+      description: |-
+        In Floquet representation

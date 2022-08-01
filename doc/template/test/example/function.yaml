@@ -1,0 +1,92 @@
+Function_Name:
+  type: method
+  name: Function_Name
+  purpose: Simple description
+  description: |-
+    Detailed description
+  syntax:
+    nameValue: true
+    groups:
+      - name: Group 1
+        syntax:
+          - outputs:
+              - out1
+            inputs:
+              - inp1
+            description: |-
+              Summary referencing |inp1|
+          - outputs:
+              - out1
+            inputs:
+              - inp1
+              - inp2
+            description: |-
+              Summary
+      - name: Group 1
+        syntax:
+          - inputs:
+              - inp1
+              - inp3
+              - inp4
+            description: |-
+              Function call with repeating inputs
+  inputs:
+    inp1:
+      purpose: Input 1
+      kind: required
+      dataType: data type
+      body: |-
+        Details about |inp1|
+    inp2:
+      purpose: Input 2
+      kind: optional
+      dims: 2
+      class: double
+      complex: false
+      type:
+        - positive
+      body: |-
+        Details
+    inp3:
+      purpose: Input 3
+      kind: optional
+      repeating: true
+      body: |-
+        Details
+    inp4:
+      purpose: Input 4
+      kind: optional
+      repeating: true
+      body: |-
+        Details
+  outputs:
+    out1:
+      purpose: Output 1
+      kind: required
+      body: |-
+        Details
+  nameValue:
+    namedArg1:
+      purpose: Named Argument 1
+      kind: namevalue
+      dims: 0
+      class: myclass
+      body: |-
+        Details
+  examples:
+    - head: Example 1
+      body: |-
+        % Some text
+        1 + 1
+        %%
+        % Some more text
+  moreAbout:
+    - head: More about 1
+      body: |-
+        Some text
+  tips:
+    - "Free format *Tips*"
+  seeAlso:
+    - publish
+  topics:
+    - Publishing

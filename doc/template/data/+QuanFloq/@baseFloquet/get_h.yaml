@@ -1,0 +1,22 @@
+baseFloquet.get_h:
+  type: method
+  name: QuanFloq.baseFloquet.get_h
+  class: QuanFloq.baseFloquet
+  purpose: Basic getter for h
+  description: |-
+    Can be overloaded for custom optimizations
+  syntax:
+    groups:
+      - syntax:
+          - outputs:
+              - h
+            description: |-
+              Calculates the time-periodic Hamiltonian in Floquet representation
+  outputs:
+    h:
+      purpose: Time-periodic Hamiltonian in Floquet representation
+      kind: required
+      class: double
+      dims: 2
+  seeAlso:
+    - QuanFloq.baseFloquet/h

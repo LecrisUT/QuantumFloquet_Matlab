@@ -1,11 +1,12 @@
 classdef (Abstract) baseFloquet < QuanFloq.baseCalc
     % baseFloquet Base class for Floquet calculations
     %
-    % See also QuanFloq.Models.TwoLevel
+    % See also QuanFloq.Models.TwoLevel. 
+    %
 
     properties (SetAccess=protected)
         % N - Size of the base Hamiltonian Hilbert space
-        N           (1,1)   double  {mustBeInteger}
+        N           (1,1)   double  {mustBeInteger,mustBeNonnegative}
         % hk_max - Fourier cutoff of the time-periodic Hamiltonian
         % See also QuanFloq.baseFloquet.hk_max2, QuanFloq.baseFloquet.hk_range
         hk_max      (1,1)   double  {mustBeInteger,mustBeNonnegative}
@@ -92,7 +93,6 @@ classdef (Abstract) baseFloquet < QuanFloq.baseCalc
     methods (Abstract,Access=protected)
         val = get_ht(obj)
     end
-    %% Constructor
     methods
         function obj = baseFloquet(N,Args)
             arguments
@@ -157,14 +157,12 @@ classdef (Abstract) baseFloquet < QuanFloq.baseCalc
 %             end
         end
     end
-    %% Basic overrides
     methods
         json = jsonencode(obj,varargin)
     end
     methods (Access=protected)
         groups = getPropertyGroups(obj)
     end
-    %% Get/Setters
     methods
         function val = get.ht(obj)
             val = obj.get_ht;
@@ -224,13 +222,10 @@ classdef (Abstract) baseFloquet < QuanFloq.baseCalc
             obj.dirty_cache = true; %#ok<MCSUP> 
         end
     end
-    %% Main methods
-    % Basic definition methods
     methods (Hidden,Access=protected)
         h = get_h(obj)
         CacheAll(obj)
     end
-    % Operation methods
     methods
         [S,om_mnk] = SpectraOverlap(obj,Psi1,Psi2,Args)
         Lk = Ladder(obj,k,Args)

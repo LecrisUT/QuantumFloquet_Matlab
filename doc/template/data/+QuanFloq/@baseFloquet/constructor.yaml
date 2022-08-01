@@ -1,0 +1,74 @@
+baseFloquet.baseFloquet:
+  type: method
+  name: QuanFloq.baseFloquet.baseFloquet
+  purpose: Constructor
+  class: QuanFloq.baseFloquet
+  abstract: true
+  description:
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - outputs:
+              - obj
+            inputs:
+              - N
+  inputs:
+    N:
+      purpose: Size of the originial Hilbert space
+      kind: required
+      dims: 0
+      class: double
+      type:
+        - positive
+        - integer
+  outputs:
+    obj:
+      purpose: Floquet object
+      kind: required
+  nameValue:
+    w:
+      purpose: Driving frequency
+      symbol: \omega
+      default: 0
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - ">=0"
+        - real
+    k_max:
+      purpose: Fourier cut-off of Fourier coefficients
+      symbol: k_{max}
+      default: 100
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - ">=0"
+        - integer
+    hk_max:
+      purpose: Fourier dimension of the time-periodic Hamiltonian
+      default: 1
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - ">=0"
+        - integer
+    xi:
+      purpose: Acceptable error
+      symbol: \xi
+      default: 1E-6
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - ">=0"
+        - real
+    cacheMat:
+      purpose: Whether to cache Floquet matrices or not
+      default: true
+      kind: namevalue
+      dims: 0
+      class: logical

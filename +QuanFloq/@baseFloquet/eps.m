@@ -26,12 +26,12 @@ function eps = eps(obj,Psi,Args)
     %   
     % See also baseFloquet.eigs
 
-    %% Make sure the wave function is in Floquet representation
+    % Make sure the wave function is in Floquet representation
     Psi = obj.Psi_Floquet(Psi);
-    %% Normalize the wave function if necessary
+    % Normalize the wave function if necessary
     if Args.normalize
         Psi = Psi ./ vecnorm(Psi);
     end
-    %% Calculate the quasi-energies
+    % Calculate the quasi-energies
     eps = diag(Psi' * obj.hf * Psi);
 end

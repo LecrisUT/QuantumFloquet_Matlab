@@ -1,0 +1,50 @@
+baseFloquet.shiftCenter:
+  type: method
+  name: QuanFloq.baseFloquet.shiftCenter
+  class: QuanFloq.baseFloquet
+  purpose: Center the wave function energy spectra
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Psi
+            description: |-
+              Shift the wave function to center its Fourier spectra
+  inputs:
+    Psi:
+      purpose: Floquet wave functions
+      kind: required
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In Floquet or Fourier representation
+  outputs:
+    Psi:
+      purpose: Shifted Floquet wave functions
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+        In Floquet representation
+  nameValue:
+    filter:
+      purpose: Filter equivalent wave functions
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: true
+      description: |-
+        If set, will filter the wave functions that represent the same state
+    tol:
+      purpose: Overlap tolerance
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: 1E-6
+      description: |-
+        If filter is set, this defines the overlap tolerance up to which two states are considered equivalent
+  seeAlso:
+    - Spectra

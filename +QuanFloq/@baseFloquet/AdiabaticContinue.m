@@ -45,7 +45,7 @@ function [Psi,ind] = AdiabaticContinue(obj,Psi,Psi_prev,Args)
             % Special case if input static WF
             Psi0_prev = Psi_prev;
         case obj.N * obj.k_max2
-            Psi0_prev = obj.Psi0(Args2.Psi_prev);
+            Psi0_prev = obj.Psi0(Psi_prev);
         otherwise
             error('Wrong size for Psi_prev (1)');
     end
@@ -80,7 +80,7 @@ function [Psi,ind] = AdiabaticContinue(obj,Psi,Psi_prev,Args)
             Args.eps = obj.eps(Psi,normalize=true);
         end
         % Calculate the difference in quasi-energies
-        dk_eps = round((Args.eps - Args.eps_prev - (mod(Args.eps-Args2.eps_prev+obj.w/2,obj.w) - obj.w/2)) / obj.w);
+        dk_eps = round((Args.eps - Args.eps_prev - (mod(Args.eps-Args.eps_prev+obj.w/2,obj.w) - obj.w/2)) / obj.w);
         for iN = 1:obj.N
             Psi(:,iN)=circshift(Psi(:,iN), obj.N * dk_eps(iN), 1);
         end

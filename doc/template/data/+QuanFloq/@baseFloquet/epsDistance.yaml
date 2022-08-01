@@ -1,0 +1,39 @@
+baseFloquet.epsDistance:
+  type: method
+  name: QuanFloq.baseFloquet.epsDistance
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the quasi-energy distance within a Brillouin zone
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - eps1
+              - eps2
+            outputs:
+              - deps
+            description: |-
+              Calculate the closest quasi-energy distance from |eps1| to |eps2|
+  inputs:
+    eps1:
+      purpose: First quasi-energy
+      kind: required
+      class: double
+      dims: [ 0, 1 ]
+      type:
+        - real
+    eps2:
+      purpose: Second quasi-energy
+      kind: required
+      class: double
+      dims: [ 0, 1 ]
+      type:
+        - real
+  outputs:
+    deps:
+      purpose: Quasi-energy distance
+      kind: required
+      dims: [ 0, 1 ]
+      class: double
+      type:
+        - real

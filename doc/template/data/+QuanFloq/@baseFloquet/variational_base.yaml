@@ -1,0 +1,172 @@
+baseFloquet.variational_base:
+  type: method
+  name: QuanFloq.baseFloquet.variational_base
+  class: QuanFloq.baseFloquet
+  purpose: Perform a generic variational search
+  description: |-
+    Generic variational search for Floquet eigenstates
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - fval
+              - cons
+              - Psi0
+            outputs:
+              - Res
+            description: |-
+              Perform generic variational search with objective function |fval| and constraints |cons| from initial
+              states |Psi0|
+  inputs:
+    fval:
+      purpose: Objective function
+      kind: required
+      dims: 0
+      description: |-
+        Objective function to be minimized. Input is a single column vector of size consistent with |Psi0|. Reshaping
+        has to be done manually
+    cons:
+      purpose: Constraints
+      kind: required
+      repeating: true
+      dims: 0
+      class: double
+      description: |-
+        Equality and inequality constraints. Input is a single column vector of size consistent with |Psi0|. Reshaping
+        has to be done manually. First output is the inequality constraint that has to be |<0| and second output is the
+        equality constraint (with respect to the tolerance)
+    Psi0:
+      purpose: Initial Floquet wave functions
+      kind: required
+      repeating: true
+      dims: 2
+      class: double
+      description: |-
+        In Floquet representation. At least one state has to be defined. Second dimension (column dimension) allows for
+        multiple wave functions to be searched.
+        
+        Search size (row dimension) is $N(2k_{max}+1-2hk_{max})$, with additional search variables allowed at the end of
+        it.
+  outputs:
+    Res:
+      purpose: Results
+      kind: required
+      dims: 1
+      class: struct
+      details: Res
+      description: |-
+        Potential solutions. See structs section for defined fields. Should be post-processed by the actual
+        implementations.
+  nameValue:
+    opts:
+      purpose: Optimization options of fmincon
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |optimoptions| of |fmincon|. See source code for defaults
+    ms:
+      purpose: Multistart options
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |multistart| options. See source code for defaults
+    TypX:
+      purpose: Typical X
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Override generated |TypX| in |opts| indicating typical size of the search space variation. Size must correspond
+        to 'Psi0' effective search size (including quasi-energy)
+    tol:
+      purpose: Convergence tolerance
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - positive
+      default: 1E-12
+    filter_nconv:
+      purpose: Filter non-converging solutions
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: true
+      description: |-
+        If set, will filter non-converging solutions, otherwise each |Res| corresponds to the initial state |Psi0|
+    TrackPsi:
+      purpose: Track converging path
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set, will track the trial wave functions and other basic information during the variational search. See
+        |steps| for tracked values
+  structs:
+    Res:
+      Psi:
+        purpose: Final wave function
+        dims: 2
+        class: double
+        description: |-
+          In Floquet representation. Empty if did not converge. Size consistent with |Psi0| passed
+      conv:
+        purpose: Convergence state
+        dims: 0
+        class: logical
+        description: |-
+          If true, the final wave function may have converged. Actual implementation should verify |Fval| and |optim|
+      Fval:
+        purpose: Final objective function value
+        dims: 0
+        class: double
+        type:
+          - real
+        description: |-
+          NaN if not convergent
+      optim:
+        purpose: Optimality
+        dims: 0
+        class: double
+        type:
+          - real
+          - ">=0"
+        description: |-
+          Effectively the largest gradient absolute value. NaN if not convergent
+      NSteps:
+        purpose: Number of iteration steps
+        dims: 0
+        class: double
+        type:
+          - integer
+          - positive
+        description: |-
+          Does not include trial steps used for calculating the gradient. If |TrackPsi| is false, this is set to NaN
+      steps:
+        purpose: Iteration steps
+        dims: 1
+        class: struct
+        details: steps
+        description: |-
+          Structure containing the tracked values at each step
+          
+          [Note: Currently additional tracked items should be derived from the trial wave function]
+    steps:
+      Psi:
+        purpose: Trial wave function
+        dims: 2
+        class: double
+        description: |-
+          In Floquet representation. Does not satisfy the constraints. Size is consistent with |Psi0| passed
+
+  seeAlso:
+    - MultiStart
+    - fmincon

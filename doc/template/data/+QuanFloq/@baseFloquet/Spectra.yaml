@@ -1,0 +1,109 @@
+baseFloquet.Spectra:
+  type: method
+  name: QuanFloq.baseFloquet.Spectra
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the energy spectra
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Pk
+            description: |-
+              Calculate the discrete Fourier energy spectra
+      - syntax:
+          - inputs:
+              - Psi
+              - E_range
+            outputs:
+              - PE
+            description: |-
+              [Not Implemented] Calculate the continuous Fourier energy spectra
+          - inputs:
+              - Psi
+              - E_range
+              - eps
+            outputs:
+              - PE
+            description: |-
+              [Not Implemented] Shift the energy spectra according to the quasi-energy giving the physical energy spectra
+      - syntax:
+          - inputs:
+              - Psi
+              - E_range
+              - t_max
+            outputs:
+              - PET
+            description: |-
+              [Not Implemented] Calculate the continuous Fourier energy spectra
+  inputs:
+    Psi:
+      purpose: Floquet wave functions
+      kind: required
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In Floquet or Fourier representation
+  outputs:
+    Pk:
+      purpose: Fourier energy spectra
+      kind: required
+      dims: 2
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Discrete Fourier energy spectra normalized to unity
+    PE:
+      purpose: Continuous energy spectra
+      kind: required
+      dims: 2
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        [Not implemented] Evaluated at points |E_range|
+    PET:
+      purpose: Finite-time energy spectra
+      kind: required
+      dims: 2
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        [Not implemented] Evaluated at points |E_range| with integration limit |t_max|
+  nameValue:
+    E_range:
+      purpose: Energy range
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        [Not implemented] Energy values to evaluate the continuous energy spectra
+    t_max:
+      purpose: Time integration limit
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - real
+        - positive
+      description: |-
+        [Not implemented] Used to calculate the finite-time energy spectra instead of the infinite one
+    eps:
+      purpose: Quasi-energy eigenvalues
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        [Not implemented] If set, will shift the energy spectra according to the quasi-energies, thus calculating the
+        physical energy spectra instead of the Floquet one. Assumes |Psi| are quasi-energy eigenstates

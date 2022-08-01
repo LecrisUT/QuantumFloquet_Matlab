@@ -1,0 +1,9 @@
+baseFloquet.CacheAll:
+  type: method
+  name: QuanFloq.baseFloquet.CacheAll
+  class: QuanFloq.baseFloquet
+  purpose: CacheAll Cache all fundamental matrix objects
+  syntax:
+    groups:
+      - syntax:
+          -

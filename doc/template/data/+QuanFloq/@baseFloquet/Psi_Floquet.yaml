@@ -1,0 +1,30 @@
+baseFloquet.Psi_Floquet:
+  type: method
+  name: QuanFloq.baseFloquet.Psi_Floquet
+  class: QuanFloq.baseFloquet
+  purpose: Transform a wave function in Floquet representation
+  syntax:
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - Psi
+            description: |-
+              Transform the wave function into the Floquet representation
+  inputs:
+    Psi:
+      purpose: Wave function to transform
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        In either Floquet or Fourier representation
+  outputs:
+    Psi:
+      purpose: Wave function in Floquet representation
+      kind: required
+      dims: 2
+      class: double
+  seeAlso:
+    - Psi_Fourier

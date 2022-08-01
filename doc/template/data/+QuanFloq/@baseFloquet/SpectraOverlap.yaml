@@ -1,0 +1,100 @@
+baseFloquet.SpectraOverlap:
+  type: method
+  name: QuanFloq.baseFloquet.SpectraOverlap
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the spectra overlap/transition measure
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi1
+              - Psi2
+            outputs:
+              - S
+            description: |-
+              Calculate the spectra overlap between states |Psi1| and |Psi2|
+      - syntax:
+          - inputs:
+              - Psi1
+              - Psi2
+            outputs:
+              - S_mnk
+              - om_mnk
+            description: |-
+              Calculate the spectra transition measures with corresponding transition frequencies between states |Psi1| and |Psi2|
+  inputs:
+    Psi1:
+      purpose: First set of wave functions
+      kind: required
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In Floquet or Fourier representation
+    Psi2:
+      purpose: Second set of wave functions
+      kind: required
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In Floquet or Fourier representation
+  outputs:
+    S:
+      purpose: Spectra overlap measure
+      kind: required
+      dims: 2
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Spectra overlap measure of each pair of states in |Psi1| (rows) and |Psi2| (columns) 
+        
+        [Note: should be scalar representing overlap of subspaces, but not implemented]
+    S_mnk:
+      purpose: Spectra transition measure
+      kind: required
+      dims: 3
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Spectra transition measure of each combination of states |Psi1| (rows), |Psi2| (columns) and transition
+        frequencies |om_mnk|.
+    om_mnk:
+      purpose: Transition frequencies
+      kind: required
+      dims: 3
+      class: double
+      type:
+        - real
+      description: |-
+        Transition frequency of transition from |Psi1| to |Psi2| including all Floquet branches
+  nameValue:
+    eps1:
+      purpose: Quasi-energies of states |Psi1|
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        If not provided they are calculated automatically
+    eps2:
+      purpose: Quasi-energies of states |Psi2|
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        If not provided they are calculated automatically
+    sk_max:
+      purpose: Fourier cut-off of transition frequencies
+      kind: namevalue
+      dims: 0
+      class: double
+      default: 2*hk_max
+      type:
+        - integer

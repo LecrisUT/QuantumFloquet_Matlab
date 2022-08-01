@@ -1,0 +1,108 @@
+baseFloquet.eigs:
+  type: method
+  name: QuanFloq.baseFloquet.eigs
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the Floquet eigenstates/eigenvalues
+  description: |-
+    Calculates either the quasi-energy or average energy Floquet eigenstates
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - outputs:
+              - eps
+            description: |-
+              Calculate the quasi-energy eigenvalues
+          - outputs:
+              - Psi
+              - eps
+            description: |-
+              Outputs the quasi-energy eigenstates as well
+      - syntax:
+          - outputs:
+              - Psi
+              - eps
+              - Ebar
+            description: |-
+              Calculate the average energy eigentriplet
+      - syntax:
+          - inputs:
+              - iterator
+            outputs: all
+            description: |-
+              Calculate the adiabatically continued eigenstate/eigenvalues along the path of |iterator|
+  inputs:
+  outputs:
+    Psi:
+      purpose: Floquet eigenstate
+      kind: optional
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In Floquet representation. If |iterator| is passed, each step in the adiabatic continuation is represented by the third dimension
+    eps:
+      purpose: Quasi-energy eigenvalue
+      kind: optional
+      dims: [ 1, 2 ]
+      class: double
+      type:
+        - real
+      description: |-
+        If |iterator| is passed, each step in the adiabatic continuation is represented by the second dimension
+    Ebar:
+      purpose: Average energy eigenvalue
+      kind: optional
+      dims: [ 1, 2 ]
+      class: double
+      type:
+        - real
+      description: |-
+        If |iterator| is passed, each step in the adiabatic continuation is represented by the second dimension
+  nameValue:
+    iterator:
+      purpose: Adiabatic path
+      kind: namevalue
+      dims: 0
+      class: QuanFloq.baseCalcIterator
+      description: |-
+        Iterator that updates the object's parameter on an adiabatic path
+    Print:
+      purpose: Print progress for adiabatic continuation
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: true
+      description: |-
+        If iterator object is passed, will toggle printing the progress of the eigenstate calculation, otherwise has no 
+        effect
+    eps0:
+      purpose: Quasi-energy Brillouin zone center
+      kind: namevalue
+      dims: 0
+      class: double
+      type:
+        - real
+      description: |-
+        If this is passed, will center the quasi-energy eigenvalues around it. If |iterator| is also passed, this only 
+        affects the initial value. If it is not defined, the eigenstates are centered around their energy spectra
+    Psi_prev:
+      purpose: Wave functions to adiabatically continue with
+      kind: namevalue
+      dims: 2
+      class: double
+      description: |-
+        Can either be wave functions in Floquet representation or static ones. If |iterator| is also passed, it defines 
+        the initial state. Internally set by |iterator|
+    eps_prev:
+      purpose: Quasi-energies to adiabatically continue with
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        If defined, will shift each state's brillouin zone to adiabatically continue the quasi-energies, otherwise the
+        states are in the representation defined by |eps0|. Internally set by |iterator|
+  seeAlso:
+    - HBar
+    - QuanFloq.baseFloquet/prop-xi

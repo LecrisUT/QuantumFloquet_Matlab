@@ -1,0 +1,112 @@
+baseFloquet.variational:
+  type: method
+  name: QuanFloq.baseFloquet.variational
+  class: QuanFloq.baseFloquet
+  purpose: Calculate Floquet eigenstates using a variational method
+  description: |-
+    See specific implementation for more details, e.g. constraints
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - method
+            outputs:
+              - Res
+            description: |-
+              Perform the minimization specified in |method| with default generated starting wave functions
+          - inputs:
+              - method
+              - Psi0
+            outputs:
+              - Res
+            description: |-
+              Specify the starting wave-functions |Psi0|
+  inputs:
+    method:
+      purpose: Variational method
+      kind: required
+      dims: 0
+      class: string
+      choices:
+        - "\"varQE\""
+        - "\"AE\""
+      description: |-
+        Variational method to be executed. Currently implemented are:
+        * "*varQE*": Quasi-energy variance minimization (see variational_varQE)
+        * "*AE*": Average energy minimization (see variational_AE)
+    Psi0:
+      purpose: Initial Floquet wave functions
+      kind: optional
+      repeating: true
+      dims: 2
+      class: double
+      default: "[1;0;0;...]"
+      description: |-
+        In Floquet representation. Defaults to a single static wave function fully occupied by the first state. See
+        specific implementation for allowed sizes
+  outputs:
+    Res:
+      purpose: Results
+      kind: required
+      dims: 1
+      class: struct
+      details: Res
+      description: |-
+        All (convergent) solutions. See specific implementation for implemented fields
+  nameValue:
+    opts:
+      purpose: Optimization options of fmincon
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |optimoptions| of |fmincon|. See specific implementations for more details
+    ms:
+      purpose: Multistart options
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |multistart| options. See specific implementations for more details
+    TypX:
+      purpose: Typical X
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Override generated |TypX| in |opts| indicating typical size of the search space variation. Must match the search
+        vector sizes of the specific implementation. See |Psi0| of the specific implementations for more details
+    tol:
+      purpose: Convergence tolerance
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - positive
+      description: |-
+        Not to be confused with acceptable error |xi|.  See specific implementations for more details
+    filter_nconv:
+      purpose: Filter non-converging solutions
+      kind: namevalue
+      dims: 0
+      class: logical
+      description: |-
+        If set, will filter non-converging solutions, otherwise each |Res| corresponds to the initial state |Psi0|.
+        See specific implementations for more details
+    TrackPsi:
+      purpose: Track converging path
+      kind: namevalue
+      dims: 0
+      class: logical
+      description: |-
+        If set, will track the trial wave functions and other basic information during the variational search. See
+        |steps| in specific implementations for tracked values
+  seeAlso:
+    - QuanFloq.baseFloquet/prop-xi
+    - variational_AE
+    - variational_QE

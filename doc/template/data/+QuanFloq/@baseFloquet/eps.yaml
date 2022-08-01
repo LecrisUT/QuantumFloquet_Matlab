@@ -1,0 +1,43 @@
+baseFloquet.eps:
+  type: method
+  name: QuanFloq.baseFloquet.eps
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the quasi-energies
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - eps
+            description: |-
+              Calculate the quasi-energies
+  inputs:
+    Psi:
+      purpose: Wave functions
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        Either in Floquet or Fourier representation. Multiple states can be passed in the second dimension.
+  outputs:
+    eps:
+      purpose: Quasi-energies
+      symbol: \epsilon
+      kind: required
+      dims: 1
+      class: double
+      type:
+        - real
+  nameValue:
+    normalize:
+      purpose: Normalize the wavefunctions before calculating
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set to true, will first normalize the wave functions before calculating the quasi-energies
+  seeAlso:
+    - eigs

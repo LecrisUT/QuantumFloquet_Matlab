@@ -1,0 +1,51 @@
+baseFloquet.varEps:
+  type: method
+  name: QuanFloq.baseFloquet.varEps
+  class: QuanFloq.baseFloquet
+  purpose: Calculate the quasi-energy variance
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+            outputs:
+              - varEps
+            description: |-
+              Calculate the quasi-energy variance of states |Psi|
+  inputs:
+    Psi:
+      purpose: Wave functions
+      kind: required
+      class: double
+      dims: [ 2, 3 ]
+      description: |-
+        Either in Floquet or Fourier representation. Multiple states can be passed in the second dimension.
+  outputs:
+    varEps:
+      purpose: Quasi-energy variance
+      kind: required
+      dims: 1
+      class: double
+      type:
+        - real
+  nameValue:
+    eps:
+      purpose: Quasi-energies
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        Pre-calculated quasi-energies. If not provided, they are calculated automatically
+    normalize:
+      purpose: Normalize the wavefunctions before calculating
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set to true, will first normalize the wave functions before calculating
+  seeAlso:
+    - eigs

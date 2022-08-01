@@ -1,0 +1,171 @@
+baseFloquet.variational_AE:
+  type: method
+  name: QuanFloq.baseFloquet.variational_AE
+  class: QuanFloq.baseFloquet
+  purpose: Perform average energy minimization
+  description: |-
+    Constraints:
+    * Normalization of the Floquet wave function
+    * Quasi-energy variation condition (vanishing quasi-energy gradient)
+    Not applied:
+    * Normalization of the wave function at $t=0$. Should be implicitly satisfied by the above
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi0
+            outputs:
+              - Res
+            description: |-
+              Perform average energy minimization from initial states |Psi0|
+  inputs:
+    Psi0:
+      purpose: Initial Floquet wave functions
+      kind: required
+      repeating: true
+      dims: 1
+      class: double
+      description: |-
+        In Floquet representation. At least one state has to be defined. Allowed sizes are:
+        * $N(2k_{max}+1-2hk_{max})$: This is the effective search size
+        * $N(2k_{max}+1)$: (Full Floquet representation)
+        * $N$: (Static wave functions)
+        Additional allowed sizes are the ones above |+1|, representing the initial quasi-energy. If not provided, it
+        is calculated automatically
+  outputs:
+    Res:
+      purpose: Results
+      kind: required
+      dims: 1
+      class: struct
+      details: Res
+      description: |-
+        All (convergent) solutions. See structs section for defined fields
+  nameValue:
+    opts:
+      purpose: Optimization options of fmincon
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |optimoptions| of |fmincon|. See source code for defaults
+    ms:
+      purpose: Multistart options
+      kind: namevalue
+      dims: 0
+      class: struct
+      description: |-
+        Override generated |multistart| options. See source code for defaults
+    TypX:
+      purpose: Typical X
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - ">=0"
+      description: |-
+        Override generated |TypX| in |opts| indicating typical size of the search space variation. Size must correspond
+        to 'Psi0' effective search size (including quasi-energy)
+    tol:
+      purpose: Convergence tolerance
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+        - positive
+      description: |-
+        Not to be confused with acceptable error |xi|.  See variational_base for default
+    filter_nconv:
+      purpose: Filter non-converging solutions
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: true
+      description: |-
+        If set, will filter non-converging solutions, otherwise each |Res| corresponds to the initial state |Psi0|
+    TrackPsi:
+      purpose: Track converging path
+      kind: namevalue
+      dims: 0
+      class: logical
+      default: false
+      description: |-
+        If set, will track the trial wave functions and other basic information during the variational search. See
+        |steps| for tracked values
+  structs:
+    Res:
+      Psi:
+        purpose: Final wave function
+        dims: 1
+        class: double
+        description: |-
+          In Floquet representation. Can be empty if not convergent and cannot retrieve final value. If convergent,
+          satisfies constraints
+      eps:
+        purpose: Final quasi-energy
+        dims: 0
+        class: double
+        type:
+          - real
+        description: |-
+          Can be NaN if not convergent and cannot retrieve final value.
+      conv:
+        purpose: Convergence state
+        dims: 0
+        class: logical
+        description: |-
+          If true, the final wave function has converged. Additional convergence tests:
+          * Gradient is small: optim < 1E-3 or |xi| (whichever is higher)
+      Fval:
+        purpose: Final average energy
+        dims: 0
+        class: double
+        type:
+          - real
+        description: |-
+          Can be NaN if not convergent and cannot retrieve final value.
+      optim:
+        purpose: Optimality
+        dims: 0
+        class: double
+        type:
+          - real
+          - ">=0"
+        description: |-
+          Effectively the largest gradient absolute value. Can be NaN if not convergent and cannot retrieve final value.
+      NSteps:
+        purpose: Number of iteration steps
+        dims: 0
+        class: double
+        type:
+          - integer
+          - positive
+        description: |-
+          Does not include trial steps used for calculating the gradient. If |TrackPsi| is false, this is set to NaN
+      steps:
+        purpose: Iteration steps
+        dims: 1
+        class: struct
+        details: steps
+        description: |-
+          Structure containing the tracked values at each step
+    steps:
+      Psi:
+        purpose: Trial wave function
+        dims: 1
+        class: double
+        description: |-
+          In Floquet representation. Does not satisfy the constraints
+      eps:
+        purpose: Trial quasi-energy
+        dims: 0
+        class: double
+        description: |-
+          Does not represent the quasi-energy unless constraint is satisfied
+
+  seeAlso:
+    - variational_base
+    - EBar

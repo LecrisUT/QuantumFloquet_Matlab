@@ -1,0 +1,97 @@
+baseFloquet:
+  type: class
+  name: QuanFloq.baseFloquet
+  purpose: Base class for Floquet calculations
+  description:
+  abstract: true
+  superclass:
+    - QuanFloq.baseCalc
+  constructors:
+    nameValue: true
+    syntax:
+      - "obj=baseFloquet(N)"
+  properties:
+    N:
+      purpose: Size of the base Hamiltonian Hilbert space
+      symbol: N
+      setAccess: protected
+      class: double
+      dims: 0
+      type:
+        - positive
+        - integer
+    hk_max:
+      purpose: Fourier cutoff of the time-periodic Hamiltonian
+      setAccess: protected
+      class: double
+      dims: 0
+      type:
+        - ">=0"
+        - integer
+    k_max:
+      purpose: Fourier space cutoff
+      symbol: k_{max}
+      class: double
+      dims: 0
+      type:
+        - ">=0"
+        - integer
+    w:
+      purpose: Driving frequency
+      symbol: \omega
+      class: double
+      dims: 0
+      type:
+        - ">=0"
+        - real
+    xi:
+      purpose: Acceptable error
+      symbol: \xi
+      class: double
+      dims: 0
+      type:
+        - ">=0"
+        - real
+    systemBath:
+      purpose: System bath coupling
+      class: QuanFloq.baseSystemBath
+      dims: 0
+    h:
+      purpose: Time-periodic Hamiltonian in Floquet representation
+      class: double
+      dims: 2
+      dependent: true
+    hf:
+      purpose: Floquet Hamiltonian
+      class: double
+      dims: 2
+      dependent: true
+    ht:
+      purpose: Time-periodic Hamiltonian in Fourier representation
+      class: double
+      dims: 3
+      dependent: true
+  methods:
+    get_ht:
+      abstract: true
+      access: protected
+    SpectraOverlap:
+    Ladder:
+    epsDistance:
+    shiftBZ:
+    HBar:
+    Ebar:
+    eps:
+    varEps:
+    Psi0:
+    Psi_Floquet:
+    Psit:
+    Spectra:
+    eigs:
+    shiftCenter:
+    variational:
+    matchSize:
+    FixPhase:
+    AdiabaticContinue:
+  seeAlso:
+    - QuanFloq.Models.TwoLevel

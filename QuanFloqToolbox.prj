@@ -7,16 +7,32 @@
     <param.summary>Library for quantum Floquet calculations</param.summary>
     <param.description>Implements various calculations, post-processing and plotting functions commonly used in quantum Floquet calculations.</param.description>
     <param.screenshot />
-    <param.version>0.1</param.version>
+    <param.version>0.1.0</param.version>
     <param.output>${PROJECT_ROOT}/Quantum Floquet.mltbx</param.output>
     <param.products.name />
     <param.products.id />
     <param.products.version />
     <param.platforms />
     <param.guid>88f227d6-9730-45d6-9214-cddd30bb6736</param.guid>
-    <param.exclude.filters>**/.git</param.exclude.filters>
+    <param.exclude.filters>.git
+.github
+.idea
+.gitignore
+.gitattributes
+doc/template
+requirements.txt
+venv</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
-    <param.examples />
+    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;examples&gt;
+   &lt;exampleCategory name="doc"&gt;
+      &lt;example name="index" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/index.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/index.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+&lt;/examples&gt;</param.examples>
     <param.demosxml />
     <param.apps />
     <param.registered.apps />
@@ -50,7 +66,6 @@
       <param.products.version />
       <param.platforms />
       <param.exclude.pcodedmfiles />
-      <param.examples />
       <param.demosxml />
       <param.apps />
       <param.registered.apps />
@@ -77,13 +92,15 @@
     </fileset.rootdir>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}/+QuanFloq</file>
-      <file>${PROJECT_ROOT}/.gitattributes</file>
-      <file>${PROJECT_ROOT}/.gitignore</file>
+      <file>${PROJECT_ROOT}/LICENSE</file>
       <file>${PROJECT_ROOT}/README.md</file>
       <file>${PROJECT_ROOT}/demos.xml</file>
       <file>${PROJECT_ROOT}/doc</file>
-      <file>${PROJECT_ROOT}/helptoc.xml</file>
+      <file>${PROJECT_ROOT}/functionSignatures.json</file>
       <file>${PROJECT_ROOT}/info.xml</file>
+      <file>${PROJECT_ROOT}/m2mxdom.m</file>
+      <file>${PROJECT_ROOT}/mxdom2simplehtml.xsl</file>
+      <file>${PROJECT_ROOT}/mxdom2simplehtml_fordemos.xsl</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded />
@@ -105,7 +122,7 @@
       <vista>false</vista>
       <linux>true</linux>
       <solaris>false</solaris>
-      <osver>5.18.11-200.fc36.x86_64</osver>
+      <osver>5.18.13-200.fc36.x86_64</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>glnxa64</arch>

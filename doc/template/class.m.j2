@@ -1,0 +1,196 @@
+%% {{ name }}
+% <html>
+{% set package = getPackage() %}
+{% if package %}
+%   <p style="float:none;margin-bottom:unset"><b>Package:</b>&nbsp;<a href="{{ package|getHRef }}"><code>{{ package }}</code></a></p>
+{% endif %}
+{% if superclass %}
+%   <p style="float:none;margin-bottom:unset"><b>SuperClass:</b>&nbsp;
+{% for class in superclass %}
+%     <a href="{{ class|getHRef }}"><code>{{ class }}</code></a>
+{% if not loop.last %},&nbsp;{% endif %}
+{% endfor %}
+%   </p>
+{% endif %}
+{% if abstract %}
+%   <p style="float:none;margin-bottom:unset"><b>Abstract:</b>&nbsp;<code>{{ abstract|string }}</code></p>
+{% endif %}
+{% if purpose %}
+%   <p style="float:none;margin-top:10px">{{ purpose }}</p>
+{% endif %}
+% </html>
+%%
+% {{ description|default('') }}
+%
+{% if consturctors %}
+%% Constructors
+% <html>
+%   <div class="syntax_signature">
+%     <a href="constructor.html"><div class="syntax_signature_module">
+{% for syntax in constructors.syntax %}
+%       <div class="code_responsive">
+%         <code class="synopsis">{{ syntax }}</code>
+%       </div>
+{% endfor %}
+{% if consturctors.nameValue %}
+%       <div class="code_responsive">
+%         <code class="synopsis">obj = {{ name }}(___,Name,Value)</code>
+%       </div>
+{% endif %}
+%     </div></a>
+%   </div>
+% </html>
+{% endif %}
+{% if properties %}
+%% Properties
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for key, values in properties.items() %}
+        {% set itemName = "prop-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+        {% if values.abstract %}
+%       <span class="add_font_color_general remove_bold">[Abstract]</span>&nbsp;
+        {% endif %}
+        {% if values.access in ('private','protected') %}
+%           <span class="add_font_color_general remove_bold">[{{ values.access }}]</span>&nbsp;
+        {% endif %}
+%           <code>{{ key }}</code> &#8212; {{ values.purpose}}<br/>
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|replace("\n","\n% ") }}
+%
+% <html>
+        {% if values.setAccess in ('private','protected') %}
+%           <p style="margin-bottom:0"><b>SetAccess:</b>&nbsp;{{ values.setAccess }}</p>
+        {% endif %}
+        {% if values.getAccess in ('private','protected') %}
+%           <p style="margin-bottom:0"><b>GetAccess:</b>&nbsp;{{ values.getAccess }}</p>
+        {% endif %}
+%           <p style="margin-bottom:0"><b>Checks:</b>&nbsp;{{ values|getTypes|join(', ')|default('None') }}</p>
+%         </div>
+%       </div>
+%     </div></div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if methods %}
+%% Methods
+% <html>
+%   <div class="table-responsive"><table class="table table-bordered table-condensed"><tbody>
+%     <tr>
+%       <th>Tags</th>
+%       <th>Method</th>
+%       <th>Description</th>
+%     </tr>
+    {% for key, values in methods.items() %}
+%     <tr>
+%       <td>
+        {% if values.abstract %}
+%         <p style="margin-bottom:unset;margin-top:unset">Abstract</p>
+        {% endif %}
+        {% if values.access in ('private','protected') %}
+%         <p style="margin-bottom:unset;margin-top:unset">{{ values.access }}</p>
+        {% endif %}
+%       </td>
+%       <td class="term notranslate">
+%         <a href="{{ key|getHRef }}"><code class="function">{{ key }}</code></a>
+%       </td>
+%       <td class="description">
+%         {{ key|getPurpose }}
+%       </td>
+%     </tr>
+    {% endfor %}
+%   </tbody></table></div>
+% </html>
+{% endif %}
+{% if structs %}
+%% Custom structures
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for key, values in structs.items() %}
+        {% set itemName = "struc-" + key %}
+%     <div class="panel-group" role="tablist" aria-multiselectable="true"><div class="panel panel-default">
+%       <!-- Header -->
+%       <div role="tab" id="{{ itemName }}_head" data-toggle="collapse" data-target="#{{ itemName }}_body" aria-controls="{{ itemName }}_body" class="panel-heading add_cursor_pointer" aria-expanded="true">
+%         <h3 class="panel-title" id="{{ itemName }}">
+%           <code>{{ key }}</code> &#8212; {{ values.purpose}}<br/>
+%           <span class="add_font_color_general remove_bold">{{ values|getDataType}}</span>
+%         </h3>
+%         <span class="icon-arrow-open-down icon_24"></span>
+%         <span class="icon-arrow-open-right icon_24"></span>
+%       </div>
+%       <!-- Body -->
+%       <div role="tabpanel" id="{{ itemName }}_body" aria-labelledby="{{ itemName }}_head" class="panel-collapse collapse in">
+%         <div class="panel-body">
+% </html>
+%
+% {{ values.body|default('')|replace("\n","\n% ") }}
+%
+% <html>
+%         </div>
+%       </div>
+%     </div></div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+{% if moreAbout %}
+{% set aboutNS = namespace(num=0) %}
+%% More About
+% <html>
+%   <div class="expandableContent">
+%     <p class="switch">
+%       <a href="javascript:void(0);" class="expandAllLink" data-allexpanded="true">collapse all</a>
+%     </p>
+    {% for item in moreAbout %}
+        {% set aboutNS.num = aboutNS.num + 1 %}
+%     <div class="expand_collapse">
+%       <!-- Header -->
+%       <h3 class="expand_trigger" id="moreabout{{ aboutNS.num|string }}" aria-expanded="true" data-toggle="collapse" data-target="#moreabout{{ aboutNS.num|string }}_body" aria-controls="moreabout{{ aboutNS.num|string }}_body">
+%         <span class="icon-arrow-open-down"></span>
+%         <span class="icon-arrow-open-right"></span>
+%         {{ item.head }}
+%       </h3>
+%       <!-- Body -->
+%       <div id="moreabout{{ aboutNS.num|string }}_body" class="collapsible_content collapse in" aria-expanded="true">
+% </html>
+%
+% {{ item.body|replace("\n","\n% ")}}
+%
+% <html>
+%       </div>
+%     </div>
+    {% endfor %}
+%   </div>
+% </html>
+{% endif %}
+%% See also
+{% for item in seeAlso %}
+% <a href="{{ item|getHRef }}"><code>{{ item }}</code></a>{% if not loop.last %}, {% endif %}
+{% endfor %}
+%
+% <html>
+% <h3 id="Topics">Topics</h3>
+% </html>
+%
+{% for item in topics %}
+% <a href="{{ item|getHRef }}">{{ item }}</a>>{% if not loop.last %}, {% endif %}
+{% endfor %}

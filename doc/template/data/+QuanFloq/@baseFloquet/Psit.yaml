@@ -1,0 +1,62 @@
+baseFloquet.Psit:
+  type: method
+  name: QuanFloq.baseFloquet.Psit
+  class: QuanFloq.baseFloquet
+  purpose: Evaluate the wave functions at time $t$
+  description: |-
+    Calculates either the quasi-energy or average energy Floquet eigenstates
+  syntax:
+    nameValue: true
+    groups:
+      - syntax:
+          - inputs:
+              - Psi
+              - t
+            outputs:
+              - Phit
+            description: |-
+              Evaluate the Floquet wave functions at time |t|
+      - syntax:
+          - inputs:
+              - Psi
+              - t
+              - eps
+            outputs:
+              - Psit
+            description: |-
+              Evaluate the physical wave function at time |t|
+  inputs:
+    Psi:
+      purpose: Floquet wave functions
+      kind: optional
+      dims: [ 2, 3 ]
+      class: double
+      description: |-
+        In either Floquet or Fourier representation. If |eps| is also passed, these have to be quasi-energy eigenstates.
+  outputs:
+    Phit:
+      purpose: Floquet wave functions at time $t$
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+        In Floquet representation. If |iterator| is passed, each step in the adiabatic continuation is represented by the third dimension
+    Psit:
+      purpose: Physical wave functions at time $t$
+      kind: required
+      dims: 2
+      class: double
+      description: |-
+        Includes the quasi-energy oscillation. Floquet states |Psi| are presumed to be quasi-energy eigenstates
+  nameValue:
+    eps:
+      purpose: Quasi-energy eigenstates
+      kind: namevalue
+      dims: 1
+      class: double
+      type:
+        - real
+      description: |-
+        If passed, will evaluate the physical wave functions at time $t$=|t| instead of the Floquet ones
+  seeAlso:
+    - Psi_Fourier
